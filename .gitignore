@@ -97,7 +97,8 @@ venv.bak/
 # Rope project settings
 .ropeproject
 
-# mkdocs documentation
+# Tensorboard folder
+tboard/
 /site
 
 # mypy
