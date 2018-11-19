@@ -103,3 +103,7 @@ tboard/
 
 # mypy
 .mypy_cache/
+
+# PyCharm environment
+venv/*
+.idea/

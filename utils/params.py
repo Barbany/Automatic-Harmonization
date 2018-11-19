@@ -30,11 +30,11 @@ def parse_arguments():
              ' can be very helpful for troubleshooting problems', default=False
     )
     parser.add_argument(
-        '--split_by_phrase', action='store_true'
-        help='When loading the sequences of chords, split by phrases and pad those with defficient length'
+        '--split_by_phrase', action='store_true',
+        help='When loading the sequences of chords, split by phrases and pad those with deficient length'
              ' with respect to the maximum length. This allows to randomize partitions. If this parameter'
              ' is not provided, the sequences will be considered as continuous (resets between change of'
-             ' movements and quartets) and reshaped as if they had the average sequence length.' , default=False
+             ' movements and quartets) and reshaped as if they had the average sequence length.', default=False
     )
     parser.set_defaults(**default_params)
 
