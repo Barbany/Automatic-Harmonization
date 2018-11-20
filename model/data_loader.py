@@ -1,7 +1,7 @@
 import torch
 from torch.utils.data import Dataset
 
-from preproc.clean_data import chords_phrases
+from preproc.clean_data import create_clean_file
 
 import numpy as np
 import pandas as pd
@@ -22,7 +22,7 @@ class FolderDataset(Dataset):
 
         # Check if a cleaned version of data has already been created
         if not os.path.isfile(clean_data_file):
-            df = chords_phrases(path, clean_data_file)
+            df = create_clean_file(path, clean_data_file)
         else:
             # Load pandas dataframe with all annotations
             df = pd.read_csv(clean_data_file, sep='\t')
@@ -36,15 +36,16 @@ class FolderDataset(Dataset):
         json_file = path + 'phrases.json'
 
         # Check if dataset has to be created
-        if len(npy_files) != len([f for f in npy_files if os.path.isfile()]):
+        if len(npy_files) != len([f for f in npy_files if os.path.isfile(f)]):
             if self.verbose:
                 print('Extracting chords from: ', clean_data_file)
+
+            num_chords = df.shape[0]
 
             # Check if the JSON file with phrase divisions has to be created
             if not os.path.isfile(json_file) and split_by_phrase:
                 end_idxs = df.loc[df['phraseend']].index.values
                 num_phrases = len(end_idxs)
-                num_chords = df.shape[0]
 
                 phrases = []
 
@@ -92,6 +93,20 @@ class FolderDataset(Dataset):
                         partition_data.append(df[phrase["from"]: phrase["to"]].values)
 
                     # Save numpy files
+                    np.save(path + partition + '_clean_data.npy', partition_data)
+                    print('Dataset created for ' + partition + ' partition', '-' * 60, '\n')
+
+                    from_ = to
+
+                if self.verbose:
+                    print('There are still ' + str(num_phrases - from_) + ' phrases unassigned for rounding issues')
+
+            else:
+                # TODO: Take into account change of movement/quartet?
+                from_ = 0
+                for partition in partitions:
+                    to = int(np.round(num_chords * partitions[partition] / 100))
+                    partition_data = df[from_:to]
                     np.save(path + partition + '_clean_data.npy', partition_data)
                     print('Dataset created for ' + partition + ' partition', '-' * 60, '\n')
 

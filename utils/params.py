@@ -3,14 +3,21 @@
 import argparse
 
 default_params = {
-        'data_path': 'data/',
-        'seed': 123,
-        'partitions': {
-            'train': 60,
-            'validation': 20,
-            'test': 20
-            }
-    }
+    'data_path': 'data/',
+    'results_path': 'results/',
+    'seed': 123,
+    'partitions': {
+        'train': 60,
+        'validation': 20,
+        'test': 20
+        },
+    'embedding_size': 7,    # Hypothesis: 7 (number of notes) or 12 (tones in equal temperament)
+    'hidden_size': 6,
+    'learning_rate': 0.1,
+    'num_epochs': 50,
+    'anneal_factor': 2.0,
+    'batch_size': 20
+}
 
 
 def parse_arguments():

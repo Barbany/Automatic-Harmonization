@@ -1,3 +1,3 @@
 source activate deep
-python run.py
+python run.py --verbose
 source deactivate

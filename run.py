@@ -5,11 +5,13 @@ import torch.nn.init as init
 from tensorboardX import SummaryWriter
 
 from utils.params import parse_arguments, default_params
-from utils.helpers import init_random_seed, setup_results_dir, tee_stdout
-from model.trainer import forward
+from utils.helpers import init_random_seed, setup_results_dir, tee_stdout, make_data_loader
+from model.trainer import train, evaluate
+from model.rnn import RNN
 
 import numpy as np
-import subprocess
+import os
+from tqdm import tqdm
 
 
 def main(**params):
@@ -28,60 +30,63 @@ def main(**params):
     # Setup results directory depending on parameters and create log file
     results_path = setup_results_dir(params)
     tee_stdout(results_path + 'log')
+    print('Results path is ', results_path, ' and log is already set there')
 
     # Create writer for Tensorboard: Visualize plots at real time when training
     writer = SummaryWriter(log_dir=results_path + 'tboard')
 
     # Run Tensorboard
-    subprocess.run('tensorboard --logdir ' + results_path + 'tboard &')
+    # os.system('tensorboard --logdir=' + results_path + 'tboard &')
 
-    dtype = torch.FloatTensor
-    input_size, hidden_size, output_size = 7, 6, 1
-    epochs = 300
-    seq_length = 20
-    lr = 0.1
+    # Get data for all partitions
+    data_loader = make_data_loader(params)
+    data_train = data_loader('train')
+    data_validation = data_loader('validation')
+    data_test = data_loader('test')
 
-    data_time_steps = np.linspace(2, 10, seq_length + 1)
-    data = np.sin(data_time_steps)
-    data.resize((seq_length + 1, 1))
+    # TODO: Number of distinct chords
+    vocabulary_size = 20
 
-    x = Variable(torch.Tensor(data[:-1]).type(dtype), requires_grad=False)
-    y = Variable(torch.Tensor(data[1:]).type(dtype), requires_grad=False)
+    # Initiate model and move it to the GPU if possible
+    if use_cuda:
+        model = RNN(vocabulary_size, params['embedding_size'], params['hidden_size'], use_cuda).cuda()
+    else:
+        model = RNN(vocabulary_size, params['embedding_size'], params['hidden_size'], use_cuda)
 
-    w1 = torch.FloatTensor(input_size, hidden_size).type(dtype)
-    init.normal_(w1, 0.0, 0.4)
-    w1 = Variable(w1, requires_grad=True)
-    w2 = torch.FloatTensor(hidden_size, output_size).type(dtype)
-    init.normal_(w2, 0.0, 0.3)
-    w2 = Variable(w2, requires_grad=True)
+    # Define loss function
+    criterion = torch.nn.CrossEntropyLoss(size_average=False)
 
-    for i in range(epochs):
-        context_state = Variable(torch.zeros((1, hidden_size)).type(dtype), requires_grad=True)
-        total_loss = 0
-        for j in range(x.size(0)):
-            _input = x[j:(j + 1)]
-            target = y[j:(j + 1)]
-            (pred, context_state) = forward(_input, context_state, w1, w2)
-            loss = (pred - target).pow(2).sum() / 2
-            total_loss += loss
-            loss.backward()
-            w1.data -= lr * w1.grad.data
-            w2.data -= lr * w2.grad.data
-            w1.grad.data.zero_()
-            w2.grad.data.zero_()
-            context_state = Variable(context_state.data)
-        writer.add_scalar('data/loss', total_loss, i)
-        if i % 10 == 0:
-            print("Epoch: {} loss {}".format(i, total_loss.item()))
+    # Define optimizer
+    optimizer=torch.optim.SGD(model.parameters(), lr=params['learning_rate'])
 
-    context_state = Variable(torch.zeros((1, hidden_size)).type(dtype), requires_grad=False)
-    predictions = []
+    print('-'*20 + ' Start training ' + '-'*20)
 
-    for i in range(x.size(0)):
-        _input = x[i:i + 1]
-        (pred, context_state) = forward(_input, context_state, w1, w2)
-        context_state = context_state
-        predictions.append(pred.data.numpy().ravel()[0])
+    lr=params['learning_rate']
+    best_val_loss = np.inf
+    for e in tqdm(range(params['num_epochs']), desc='Epoch', ncols=100, ascii=True):
+	# Train
+        model = train(data_train, model, criterion, optimizer, params, use_cuda)
+        train_loss = evaluate(data_train, model, criterion, params, use_cuda)
+        
+	# Validation
+        val_loss = evaluate(data_validation, model, criterion, params, use_cuda)
+
+	# Anneal learning rate
+        if val_loss < best_val_loss:
+            best_val_loss = val_loss
+        else:
+            lr /= params['anneal_factor']
+            optimizer = torch.optim.SGD(model.parameters(), lr=lr)
+
+	# Test
+        test_loss = evaluate(data_test, model, criterion, params, use_cuda)
+
+	# Report
+        msg = 'Epoch %d: \tValid loss=%.4f \tTest loss=%.4f \tTest perplexity=%.1f'%(e+1,val_loss,test_loss,np.exp(test_loss))
+        tqdm.write(msg)
+        writer.add_scalars('data/loss', {'train': train_loss,
+                                         'validation': val_loss,
+                                         'test': test_loss}, e)
 
     writer.close()
 

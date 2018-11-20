@@ -2,7 +2,7 @@
 import pandas as pd
 
 
-def chords_phrases(path, clean_data_file):
+def create_clean_file(path, clean_data_file):
     df = pd.read_csv(path + 'all_annotations.tsv', sep='\t')
     # Process data:
     #  - Keep chords without end of phrase indicator (nor key)

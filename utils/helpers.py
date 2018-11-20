@@ -12,7 +12,7 @@ from utils.params import default_params
 
 
 tag_params = [
-    'split_by_phrase'
+    'split_by_phrase', 'embedding_size', 'hidden_size'
     ]
 
 
@@ -25,8 +25,8 @@ def make_tag(params):
         else:
             return str(value)
 
-    return '~'.join(
-        key + '=' + to_string(params[key])
+    return '-'.join(
+        key + '__' + to_string(params[key])
         for key in tag_params
         if key not in default_params or params[key] != default_params[key]
     )
@@ -38,19 +38,11 @@ def setup_results_dir(params):
             os.makedirs(path)
 
     tag = make_tag(params)
-    results_path = os.path.abspath(params['results_path'])
-    print('results path', results_path)
+    results_path = params['results_path']
     ensure_dir_exists(results_path)
-    results_path = os.path.join(results_path, tag)
+    results_path = results_path + tag + '/'
     if not os.path.exists(results_path):
         os.makedirs(results_path)
-    elif not params['resume']:
-        shutil.rmtree(results_path)
-        os.makedirs(results_path)
-
-    for subdir in ['checkpoints', 'samples']:
-        ensure_dir_exists(os.path.join(results_path, subdir))
-
     return results_path
 
 
