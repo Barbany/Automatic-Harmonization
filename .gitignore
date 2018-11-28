@@ -107,3 +107,7 @@ tboard/
 # PyCharm environment
 venv/*
 .idea/
+
+# Data folder and results
+data/
+results/
