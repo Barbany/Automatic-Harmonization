@@ -29,8 +29,9 @@ class FolderDataset(Dataset):
 
         # Define npy dataset file name for every partition
         npy_files = []
-        for partition in partitions:
-            npy_files.append(path + partition + '_clean_data.npy')
+        for part in partitions:
+            npy_files.append(path + part  + '_' + split_by_phrase*'phrase-split' + 
+            	(not split_by_phrase)*'sequential' + '_clean_data.npy')
 
         # Define JSON file with phrase delimiters
         json_file = path + 'phrases.json'
@@ -60,41 +61,58 @@ class FolderDataset(Dataset):
                     else:
                         item = {"from": int(end_idxs[pos - 1] + 1), "to": int(end_idx + 1)}
                         if end_idx - end_idxs[pos - 1] > longest_sequence:
-                            longest_sequence = end_idx
+                            longest_sequence = end_idx - end_idxs[pos - 1]
 
                         if pos == num_phrases - 1:
                             phrases.append(item)
                             item = {"from": int(end_idx) + 1, "to": num_chords}
                             if num_chords - end_idx > longest_sequence:
-                                longest_sequence = end_idx
+                                longest_sequence = num_chords - end_idx
                     phrases.append(item)
 
                 # Append longest sequence value to pad zeros to others for uniform length
-                phrases.append({"longest_sequence": longest_sequence})
+                phrases.append({"longest_sequence": int(longest_sequence)})
 
                 # Save all phrases to a JSON file
                 with open(json_file, 'w') as outfile:
                     json.dump(phrases, outfile)
 
+            # Split by phrases once the JSON file has been created
             if split_by_phrase:
+            	# Open phrase ranges
                 with open(json_file, "r") as infile:
                     phrases = json.load(infile)
 
-                longest_sequence = phrases[-1]
-                # Don't take longest sequence value into account
+                longest_sequence = phrases[-1]["longest_sequence"]
+
+                # Don't take longest sequence value into account (additional row in JSON file)
                 num_phrases = len(phrases) - 1
+
+                # Get random indices
                 random_phrases = np.random.permutation(num_phrases)
 
                 from_ = 0
-                for partition in partitions:
-                    to = np.round(num_phrases * partitions[partition] / 100)
-                    partition_data = []
-                    for phrase in phrases[random_phrases[from_: to]]:
-                        partition_data.append(df[phrase["from"]: phrase["to"]].values)
+                for part_idx, part in enumerate(partitions):
+                    to = from_ + int(np.round(num_phrases * partitions[part] / 100))
+                    if verbose:
+                    	print('Select random phrases from ', from_, ' to ', to)
+                    # Prellocate numpy array (phrases x sequence index x label and features)
+                    # We now fill it with special character 'x' to avoid doing padding every time
+                    part_data = np.array(['x' for _ in range((to - from_ + 1) * longest_sequence * len(df.columns))])
+                    part_data = part_data.reshape(-1, longest_sequence, len(df.columns))
+                    if verbose:
+                    	print('Data for', part, 'partition has shape', part_data.shape)
+
+                    for phrase_num, phrase_idx in enumerate(random_phrases[from_: to]):
+                    	phrase = phrases[phrase_idx]
+                    	aux = df[phrase["from"]: phrase["to"]].values
+                    	part_data[phrase_num, range(len(aux))] = aux
+                    	# if verbose:
+                    		# print('Processing phrase (with randomized index)', phrase_num)
 
                     # Save numpy files
-                    np.save(path + partition + '_clean_data.npy', partition_data)
-                    print('Dataset created for ' + partition + ' partition', '-' * 60, '\n')
+                    np.save(npy_files[part_idx], part_data)
+                    print('Dataset created for ' + part + ' partition', '-' * 60, '\n')
 
                     from_ = to
 
@@ -104,11 +122,11 @@ class FolderDataset(Dataset):
             else:
                 # TODO: Take into account change of movement/quartet?
                 from_ = 0
-                for partition in partitions:
-                    to = int(np.round(num_chords * partitions[partition] / 100))
-                    partition_data = df[from_:to]
-                    np.save(path + partition + '_clean_data.npy', partition_data)
-                    print('Dataset created for ' + partition + ' partition', '-' * 60, '\n')
+                for part_idx, part in enumerate(partitions):
+                    to = int(np.round(num_chords * partitions[part] / 100))
+                    part_data = df[from_:to]
+                    np.save(npy_files[part_idx], part_data)
+                    print('Dataset created for ' + part + ' partition', '-' * 60, '\n')
 
                     from_ = to
 
@@ -116,10 +134,11 @@ class FolderDataset(Dataset):
                     print('There are still ' + str(num_phrases - from_) + ' phrases unassigned for rounding issues')
 
         # Load previously created dataset
-        self.data = np.load(path + partition + '_clean_data.npy')
+        self.data = np.load(path + partition  + '_' + split_by_phrase*'phrase-split' + 
+            	(not split_by_phrase)*'sequential' + '_clean_data.npy')
 
         # Compute length for current partition
-        self.length = np.prod(self.data.shape[0:2])
+        self.length = self.data.shape[0]
 
         print('Data shape:', self.data.shape)
         print('Dataset loaded for ' + partition + ' partition', '-' * 60, '\n')

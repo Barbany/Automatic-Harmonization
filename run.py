@@ -19,7 +19,7 @@ def main(**params):
         default_params,
         **params
     )
-    print('-'*20 + ' Start Harmonic Sequence Predictor ' + '*'*20)
+    print('*'*20 + ' Start Harmonic Sequence Predictor ' + '*'*20)
 
     # Check if GPU acceleration is available
     use_cuda = torch.cuda.is_available()

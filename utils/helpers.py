@@ -77,5 +77,8 @@ def make_data_loader(params):
         dataset = FolderDataset(params['data_path'], params['split_by_phrase'],
                                 partition, params['partitions'], params['verbose'])
 
-        return DataLoader(dataset, batch_size=params['batch_size'], shuffle=False, drop_last=True, num_workers=2)
+        # Data loader. Combines a dataset and a sampler, and provides single- or multi-process iterators over the dataset.
+        # Parameters: - shuffle (If Falseon't reshuffle data at every epoch)
+        #             - num_workers (Number of subprocesses to use for data loading - 0: default; increment if data loading slow)
+        return DataLoader(dataset, shuffle=False, num_workers=0)
     return data_loader

@@ -1,7 +1,8 @@
 import torch
+import tqdm
 
 
-def train(data, model, criterion, optimizer, params):
+def train(data, model, criterion, optimizer, params, use_cuda):
 
     # Set model to training mode (we're using dropout)
     model.train()
@@ -13,9 +14,13 @@ def train(data, model, criterion, optimizer, params):
 
         # Get the chunk and wrap the variables into the gradient propagation chain + move them to the GPU
         seqlen=int(np.min([args.bptt,data.size(1)-1-i]))
-        x=torch.autograd.Variable(data[:,i:i+seqlen]).cuda()
-        y=torch.autograd.Variable(data[:,i+1:i+seqlen+1]).cuda()
 
+        if use_cuda:
+            x=torch.autograd.Variable(data[:,i:i+seqlen]).cuda()
+            y=torch.autograd.Variable(data[:,i+1:i+seqlen+1]).cuda()
+        else:
+            x=torch.autograd.Variable(data[:,i:i+seqlen])
+            y=torch.autograd.Variable(data[:,i+1:i+seqlen+1])
         # Truncated backpropagation
         states=model.detach(states)     # Otherwise the model would try to backprop all the way to the start of the data set
 
@@ -32,7 +37,7 @@ def train(data, model, criterion, optimizer, params):
     return model
 
 
-def evaluate(data, model, criterion):
+def evaluate(data, model, criterion, use_cuda):
 
     # Set model to evaluation mode (we're using dropout)
     model.eval()
@@ -46,8 +51,13 @@ def evaluate(data, model, criterion):
 
         # Get the chunk and wrap the variables into the gradient propagation chain + move them to the GPU
         seqlen=int(np.min([args.bptt,data.size(1)-1-i]))
-        x=torch.autograd.Variable(data[:,i:i+seqlen],volatile=True).cuda()
-        y=torch.autograd.Variable(data[:,i+1:i+seqlen+1],volatile=True).cuda()
+
+        if use_cuda:
+            x=torch.autograd.Variable(data[:,i:i+seqlen],volatile=True).cuda()
+            y=torch.autograd.Variable(data[:,i+1:i+seqlen+1],volatile=True).cuda()
+        else:
+            x=torch.autograd.Variable(data[:,i:i+seqlen],volatile=True)
+            y=torch.autograd.Variable(data[:,i+1:i+seqlen+1],volatile=True)
 
         # Truncated backpropagation
         states=model.detach(states)     # Otherwise the model would try to backprop all the way to the start of the data set

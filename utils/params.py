@@ -11,7 +11,7 @@ default_params = {
         'validation': 20,
         'test': 20
         },
-    'embedding_size': 7,    # Hypothesis: 7 (number of notes) or 12 (tones in equal temperament)
+    'embedding_size': 7,    # Hypothesis: 7 (number of notes) or 12 (tones in equal temperament) --- Add special value for empty sequence?
     'hidden_size': 6,
     'learning_rate': 0.1,
     'num_epochs': 50,

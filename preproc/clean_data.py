@@ -11,6 +11,6 @@ def create_clean_file(path, clean_data_file):
     idx = df['chord'][df['chord'].str.endswith('\\\\\\\\')].index
     df['chord'][idx] = df['chord'][idx].str.replace('\\\\\\\\', '')
 
-    # Save processed file and return it to avoid reloading
-    df.to_csv(clean_data_file, sep='\t')
+    # Save processed file and return it to avoid reloading (Don't write indices and save it as TSV - tab as separator)
+    df.to_csv(clean_data_file, index=False, sep='\t')
     return df
