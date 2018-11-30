@@ -6,8 +6,9 @@ def create_clean_file(path, clean_data_file):
     df = pd.read_csv(path + 'all_annotations.tsv', sep='\t')
     # Process data:
     #  - Keep chords without end of phrase indicator (nor key)
+    #  - Keep number of movement to know when there is a change of movement
     #  - Keep end of phrase boolean
-    df = df[['chord', 'phraseend']]
+    df = df[['chord', 'mov', 'phraseend']]
     idx = df['chord'][df['chord'].str.endswith('\\\\\\\\')].index
     df['chord'][idx] = df['chord'][idx].str.replace('\\\\\\\\', '')
 
