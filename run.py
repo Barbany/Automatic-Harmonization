@@ -44,8 +44,7 @@ def main(**params):
     data_validation = data_loader('validation')
     data_test = data_loader('test')
 
-    # TODO: Number of distinct chords
-    vocabulary_size = 20
+    vocabulary_size = data_train.vocabulary_size
 
     # Initiate model and move it to the GPU if possible
     if use_cuda:

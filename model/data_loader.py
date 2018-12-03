@@ -14,18 +14,16 @@ class FolderDataset(Dataset):
     def __init__(self, path, split_by_phrase, partition, partitions, verbose=False):
         super().__init__()
 
-        # Define set of data
+        # Define TSV for clean data and JSON files for mappings (numeral -> float) and for phrase delimiters
+        clean_data_file = path + 'clean_data.tsv'
+        mapping_file = path + 'mappings.json'
+        json_file = path + 'phrases.json'
+
+        # Define set of data, verbosity level and vocabulary size (of chords and all the database)
         self.data = []
         self.verbose = verbose
-
-        clean_data_file = path + 'clean_data.tsv'
-
-        # Check if a cleaned version of data has already been created
-        if not os.path.isfile(clean_data_file):
-            df = create_clean_file(path, clean_data_file)
-        else:
-            # Load pandas dataframe with all annotations
-            df = pd.read_csv(clean_data_file, sep='\t')
+        with open(mapping_file, "r") as infile:
+            self.vocabulary_size = len(json.load(infile)[0]['chord'])
 
         # Define npy dataset file name for every partition
         npy_files = []
@@ -33,11 +31,15 @@ class FolderDataset(Dataset):
             npy_files.append(path + part  + '_' + split_by_phrase*'phrase-split' + 
             	(not split_by_phrase)*'sequential' + '_clean_data.npy')
 
-        # Define JSON file with phrase delimiters
-        json_file = path + 'phrases.json'
-
         # Check if dataset has to be created
         if len(npy_files) != len([f for f in npy_files if os.path.isfile(f)]):
+        	# Check if a cleaned version of data has already been created
+	        if not os.path.isfile(clean_data_file):
+	            df = create_clean_file(path, clean_data_file, mapping_file)
+	        else:
+	            # Load pandas dataframe with all annotations
+	            df = pd.read_csv(clean_data_file, sep='\t')
+
             if self.verbose:
                 print('Extracting chords from: ', clean_data_file)
 
@@ -94,28 +96,27 @@ class FolderDataset(Dataset):
                 from_ = 0
                 for part_idx, part in enumerate(partitions):
                     to = from_ + int(np.round(num_phrases * partitions[part] / 100))
-                    if verbose:
+                    if self.verbose:
                     	print('Select random phrases from ', from_, ' to ', to)
                     # Prellocate numpy array (phrases x sequence index x label and features)
-                    # We now fill it with special character 'x' to avoid doing padding every time
-                    part_data = np.array(['x' for _ in range((to - from_ + 1) * longest_sequence * len(df.columns))])
-                    part_data = part_data.reshape(-1, longest_sequence, len(df.columns))
-                    if verbose:
+                    # We now fill it with sentinel (infinity value) to avoid doing padding every time
+                    part_data = np.ones(((to - from_ + 1), longest_sequence, len(df.columns)))*float(self.vocabulary_size)
+                    
+                    if self.verbose:
                     	print('Data for', part, 'partition has shape', part_data.shape)
 
                     for phrase_num, phrase_idx in enumerate(random_phrases[from_: to]):
                     	phrase = phrases[phrase_idx]
+                    	phoenetic = [transdict[letter] for letter in abc_array]
                     	aux = df[phrase["from"]: phrase["to"]].values
                     	part_data[phrase_num, range(len(aux))] = aux
-                    	# if verbose:
-                    		# print('Processing phrase (with randomized index)', phrase_num)
 
                     # Save numpy files
                     np.save(npy_files[part_idx], part_data)
                     print('Dataset created for ' + part + ' partition', '-' * 60, '\n')
 
                     from_ = to
-
+                
                 if self.verbose:
                     print('There are still ' + str(num_phrases - from_) + ' phrases unassigned for rounding issues')
 
