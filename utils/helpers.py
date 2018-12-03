@@ -74,7 +74,7 @@ def init_random_seed(seed, cuda):
 
 def make_data_loader(params):
     def data_loader(partition):
-        dataset = FolderDataset(params['data_path'], params['split_by_phrase'],
+        dataset = FolderDataset(params['data_path'], params['split_by_phrase'], params['len_seq_phrase'],
                                 partition, params['partitions'], params['verbose'])
 
         # Data loader. Combines a dataset and a sampler, and provides single- or multi-process iterators over the dataset.

@@ -111,3 +111,6 @@ venv/*
 # Data folder and results
 data/
 results/
+
+# Mac files
+.DS_Store
