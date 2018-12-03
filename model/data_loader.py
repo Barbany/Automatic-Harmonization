@@ -167,14 +167,10 @@ class FolderDataset(Dataset):
         data = torch.from_numpy(self.data[index][:-1])
         target = torch.from_numpy(self.data[index][1:])
 
-        # Reset all hidden states to avoid predicting with non-related samples
-        # if(new phrase) reset = True
-        reset = False
-
         if self.verbose:
             print('Data size: ', data.size())
 
-        return data, reset, target
+        return data, target
 
     def __len__(self):
         return self.length

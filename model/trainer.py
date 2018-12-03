@@ -2,36 +2,36 @@ import torch
 import tqdm
 
 
-def train(data, model, criterion, optimizer, params, use_cuda):
+def train(dataset, model, criterion, optimizer, params, use_cuda):
 
     # Set model to training mode (we're using dropout)
     model.train()
     # Get initial hidden and memory states
-    states=model.get_initial_states(len(data))
+    states = model.get_initial_states(len(data))
 
     # Loop sequence length (train)
-    for i in tqdm(range(0, len(data), args.bptt),desc='> Train',ncols=100,ascii=True):
-
-        # Get the chunk and wrap the variables into the gradient propagation chain + move them to the GPU
-        seqlen=int(np.min([args.bptt,data.size(1)-1-i]))
+    for data in dataset:
+        inputs = data[0]
+        targets = data[1]
 
         if use_cuda:
-            x=torch.autograd.Variable(data[:,i:i+seqlen]).cuda()
-            y=torch.autograd.Variable(data[:,i+1:i+seqlen+1]).cuda()
+            x = torch.autograd.Variable(inputs).cuda()
+            y = torch.autograd.Variable(targets).cuda()
         else:
-            x=torch.autograd.Variable(data[:,i:i+seqlen])
-            y=torch.autograd.Variable(data[:,i+1:i+seqlen+1])
+            x = torch.autograd.Variable(inputs)
+            y = torch.autograd.Variable(targets)
+        
         # Truncated backpropagation
-        states=model.detach(states)     # Otherwise the model would try to backprop all the way to the start of the data set
+        states = model.detach(states)     # Otherwise the model would try to backprop all the way to the start of the data set
 
         # Forward pass
-        logits,states=model.forward(x,states)
-        loss=criterion(logits,y.view(-1))
+        logits, states = model.forward(x, states)
+        loss = criterion(logits, y)
 
         # Backward pass
         optimizer.zero_grad()
         loss.backward()
-        torch.nn.utils.clip_grad_norm(model.parameters(),args.clip_norm)
+        torch.nn.utils.clip_grad_norm(model.parameters(), params['clip_norm'])
         optimizer.step()
 
     return model
@@ -47,27 +47,27 @@ def evaluate(data, model, criterion, use_cuda):
     # Loop sequence length (validation)
     total_loss=0
     num_loss=0
-    for i in tqdm(range(0,data.size(1)-1,args.bptt),desc='> Eval',ncols=100,ascii=True):
 
-        # Get the chunk and wrap the variables into the gradient propagation chain + move them to the GPU
-        seqlen=int(np.min([args.bptt,data.size(1)-1-i]))
+    # Loop sequence length (train)
+    for data in dataset:
+        inputs = data[0]
+        targets = data[1]
 
         if use_cuda:
-            x=torch.autograd.Variable(data[:,i:i+seqlen],volatile=True).cuda()
-            y=torch.autograd.Variable(data[:,i+1:i+seqlen+1],volatile=True).cuda()
+            x = torch.autograd.Variable(inputs).cuda()
+            y = torch.autograd.Variable(targets).cuda()
         else:
-            x=torch.autograd.Variable(data[:,i:i+seqlen],volatile=True)
-            y=torch.autograd.Variable(data[:,i+1:i+seqlen+1],volatile=True)
-
+            x = torch.autograd.Variable(inputs)
+            y = torch.autograd.Variable(targets)
         # Truncated backpropagation
         states=model.detach(states)     # Otherwise the model would try to backprop all the way to the start of the data set
 
         # Forward pass
-        logits,states=model.forward(x,states)
-        loss=criterion(logits,y.view(-1))
+        logits, states = model.forward(x,states)
+        loss = criterion(logits, y)
 
         # Log stuff
-        total_loss+=loss.data.cpu().numpy()
-        num_loss+=np.prod(y.size())
+        total_loss += loss.data.cpu().numpy()
+        num_loss += np.prod(y.size())
 
     return float(total_loss)/float(num_loss)

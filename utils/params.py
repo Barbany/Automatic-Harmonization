@@ -17,7 +17,8 @@ default_params = {
     'num_epochs': 50,
     'anneal_factor': 2.0,
     'batch_size': 20,
-    'len_seq_phrase': 50
+    'len_seq_phrase': 50,
+    'clip_norm': 0.25
 }
 
 
