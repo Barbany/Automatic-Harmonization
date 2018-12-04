@@ -36,16 +36,14 @@ def create_clean_file(path, clean_data_file, mapping_file, verbose=False):
     print("vocabulary size", df['chord'].nunique())
 
     # Create mapping for all non-numerical (nor boolean) features
-    mappings = '{'
+    mappings = {}
     for col, type_ in df.dtypes.iteritems():
         if verbose:
             print('Mapping column', col, 'from characters to floats')
         if type_ == np.object:
             vocabulary_size = np.unique(df[col].values)
-            mappings += col + ':' + str(dict([(unique_label, float(idx))
-                                              for idx, unique_label in enumerate(np.unique(df[col].values))])) + ','
-
-    mappings += '}'
+            mappings.update(dict({col: dict([(unique_label, float(idx))
+                                              for idx, unique_label in enumerate(np.unique(df[col].values))])}))
 
     with open(mapping_file, 'w') as outfile:
         json.dump(mappings, outfile)
