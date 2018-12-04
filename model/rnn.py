@@ -48,7 +48,8 @@ class RNN(torch.nn.Module):
 
     def forward(self, x, h):
         # Apply embedding (encoding)
-        y = self.embed(x)
+        y = self.embed(x[0])
+        
         # Run LSTM
         y = self.drop(y)
         y, h = self.lstm(y,h)

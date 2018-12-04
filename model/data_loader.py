@@ -177,7 +177,7 @@ class FolderDataset(Dataset):
         if self.verbose:
             print('Data size: ', data.size())
 
-        return data, target
+        return chords, target, features
 
     def __len__(self):
         return self.length
