@@ -37,7 +37,7 @@ def train(dataset, model, criterion, optimizer, params, use_cuda):
     return model
 
 
-def evaluate(dataset, model, criterion, use_cuda):
+def evaluate(dataset, model, criterion, params, use_cuda):
     # Set model to evaluation mode (we're using dropout)
     model.eval()
     # Get initial hidden and memory states

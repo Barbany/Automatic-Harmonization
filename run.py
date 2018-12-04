@@ -63,24 +63,24 @@ def main(**params):
     lr=params['learning_rate']
     best_val_loss = np.inf
     for e in tqdm(range(params['num_epochs']), desc='Epoch', ncols=100, ascii=True):
-	# Train
+        # Train
         model = train(data_train, model, criterion, optimizer, params, use_cuda)
         train_loss = evaluate(data_train, model, criterion, params, use_cuda)
-        
-	# Validation
+
+        # Validation
         val_loss = evaluate(data_validation, model, criterion, params, use_cuda)
 
-	# Anneal learning rate
+        # Anneal learning rate
         if val_loss < best_val_loss:
             best_val_loss = val_loss
         else:
             lr /= params['anneal_factor']
             optimizer = torch.optim.SGD(model.parameters(), lr=lr)
 
-	# Test
+        # Test
         test_loss = evaluate(data_test, model, criterion, params, use_cuda)
 
-	# Report
+        # Report
         msg = 'Epoch %d: \tValid loss=%.4f \tTest loss=%.4f \tTest perplexity=%.1f'%(e+1,val_loss,test_loss,np.exp(test_loss))
         tqdm.write(msg)
         writer.add_scalars('data/loss', {'train': train_loss,
