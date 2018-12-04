@@ -37,13 +37,11 @@ class FolderDataset(Dataset):
             # Load pandas dataframe with all annotations
             df = pd.read_csv(clean_data_file, sep='\t')
 
-        with open(mapping_file, "r") as infile:
-            mapping = json.load(infile)
-
-        self.vocabulary_size = len(mapping['chord'])
-
         # Check if dataset has to be created
         if len(npy_files) != len([f for f in npy_files if os.path.isfile(f)]):
+
+            with open(mapping_file, "r") as infile:
+                mapping = json.load(infile)
 
             if self.verbose:
                 print('Extracting chords from: ', clean_data_file)

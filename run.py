@@ -1,3 +1,5 @@
+import json
+
 import torch
 from torch.autograd import Variable
 import torch.nn.init as init
@@ -44,7 +46,11 @@ def main(**params):
     data_validation = data_loader('validation')
     data_test = data_loader('test')
 
-    vocabulary_size = data_train.vocabulary_size
+    mapping_file = params['data_path'] + 'mappings.json'
+    with open(mapping_file, "r") as infile:
+        mapping = json.load(infile)
+
+    vocabulary_size = len(mapping['chord'])
 
     # Initiate model and move it to the GPU if possible
     if use_cuda:
