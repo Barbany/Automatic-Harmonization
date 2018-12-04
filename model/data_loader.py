@@ -29,6 +29,14 @@ class FolderDataset(Dataset):
             npy_files.append(path + part + '_' + split_by_phrase * 'phrase-split' +
                              (not split_by_phrase) * 'sequential' + '_clean_data.npy')
 
+        # Check if a cleaned version of data has already been created
+        if not os.path.isfile(clean_data_file):
+            df = create_clean_file(path, clean_data_file, mapping_file, verbose)
+
+        else:
+            # Load pandas dataframe with all annotations
+            df = pd.read_csv(clean_data_file, sep='\t')
+
         with open(mapping_file, "r") as infile:
             mapping = json.load(infile)
 
@@ -36,13 +44,6 @@ class FolderDataset(Dataset):
 
         # Check if dataset has to be created
         if len(npy_files) != len([f for f in npy_files if os.path.isfile(f)]):
-            # Check if a cleaned version of data has already been created
-            if not os.path.isfile(clean_data_file):
-                df = create_clean_file(path, clean_data_file, mapping_file, verbose)
-
-            else:
-                # Load pandas dataframe with all annotations
-                df = pd.read_csv(clean_data_file, sep='\t')
 
             if self.verbose:
                 print('Extracting chords from: ', clean_data_file)
