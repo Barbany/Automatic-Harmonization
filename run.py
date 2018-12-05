@@ -23,6 +23,8 @@ def main(**params):
     )
     print('*'*20 + ' Start Harmonic Sequence Predictor ' + '*'*20)
 
+    verbose = params['verbose']
+
     # Check if GPU acceleration is available
     use_cuda = torch.cuda.is_available()
 
@@ -46,25 +48,39 @@ def main(**params):
     data_validation = data_loader('validation')
     data_test = data_loader('test')
 
+    # Check vocabulary size and feature size. In the second case don't open file but only read header
     mapping_file = params['data_path'] + 'mappings.json'
     with open(mapping_file, "r") as infile:
         mapping = json.load(infile)
+    
+    train_npy = params['data_path'] + 'train_' + params['split_by_phrase'] *\
+     'phrase-split' + (not params['split_by_phrase']) * 'sequential' + '_clean_data.npy'
+    with open(train_npy, 'rb') as f:
+        np.lib.format.read_magic(f)
+        shape, _, _ = np.lib.format.read_array_header_1_0(f)
 
     vocabulary_size = len(mapping['chord'])
+    # The chord itself is also saved in the same data matrix (#Features = shape[2] - 1)
+    num_features = shape[2] - 1
+
+    if verbose:
+        print('Vocabulary size is', vocabulary_size, 'and number of features is', num_features)
 
     # Initiate model and move it to the GPU if possible
     if use_cuda:
-        model = RNN(vocabulary_size, params['embedding_size'], params['hidden_size'], use_cuda).cuda()
+        model = RNN(vocabulary_size, params['embedding_size'], num_features, params['rnn_input_size'],
+                    params['hidden_size'], use_cuda).cuda()
     else:
-        model = RNN(vocabulary_size, params['embedding_size'], params['hidden_size'], use_cuda)
+        model = RNN(vocabulary_size, params['embedding_size'], num_features, params['rnn_input_size'],
+                    params['hidden_size'], use_cuda)
 
     # Define loss function
-    criterion = torch.nn.CrossEntropyLoss(size_average=False)
+    criterion = torch.nn.CrossEntropyLoss()
 
     # Define optimizer
     optimizer=torch.optim.SGD(model.parameters(), lr=params['learning_rate'])
 
-    print('-'*20 + ' Start training ' + '-'*20)
+    print('-'*22 + ' Start training ' + '-'*22)
 
     lr=params['learning_rate']
     best_val_loss = np.inf

@@ -16,9 +16,11 @@ default_params = {
     'learning_rate': 0.1,
     'num_epochs': 50,
     'anneal_factor': 2.0,
-    'batch_size': 20,
     'len_seq_phrase': 50,
-    'clip_norm': 0.25
+    'clip_norm': 0.25,
+    'num_features': 3,
+    'rnn_input_size': 20,
+    'batch_size': 1
 }
 
 

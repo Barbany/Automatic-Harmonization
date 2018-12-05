@@ -2,6 +2,7 @@ import torch
 from torch.utils.data import Dataset
 
 from preproc.clean_data import create_clean_file
+from utils.params import default_params
 
 import numpy as np
 import pandas as pd
@@ -10,8 +11,7 @@ import os
 
 
 class FolderDataset(Dataset):
-
-    def __init__(self, path, split_by_phrase, len_seq_phrase, partition, partitions, verbose=False):
+    def __init__(self, path, split_by_phrase, len_seq_phrase, partition, partitions, batch_size, verbose=False):
         super().__init__()
 
         # Define TSV for clean data and JSON files for mappings (numeral -> float) and for phrase delimiters
@@ -146,12 +146,15 @@ class FolderDataset(Dataset):
                     # We don't need the movement to train the model
                     df_model = df.drop('mov', 1)
                     padding_size = len_seq_phrase - (to - from_) % len_seq_phrase
-                    padding = np.ones((padding_size, len(df_model.columns)), dtype=float)
-                    part_data = np.array(df_model[from_:to])
+                    padding = np.ones((padding_size, len(df_model.columns)), dtype=float) * float(self.vocabulary_size)
+
+                    part_data = np.array(df_model[from_:to], dtype=float)
                     part_data = np.concatenate((part_data, padding), axis=0)
                     part_data = part_data.reshape(-1, len_seq_phrase, len(df_model.columns))
+
                     np.save(npy_files[part_idx], part_data)
                     if self.verbose:
+                        print('Type of data is', part_data.dtype)
                         print('Dataset created for ' + part + ' partition\n', '-' * 60, '\n')
 
                     from_ = to
@@ -164,20 +167,23 @@ class FolderDataset(Dataset):
         self.length = self.data.shape[0]
 
         print('Data shape:', self.data.shape)
-        print('Dataset loaded for ' + partition + ' partition\n', '-' * 60, '\n')
+        print('Dataset loaded for ' + partition + ' partition\n' + '-' * 60, '\n')
 
 
     def __getitem__(self, index):
         # Compute which sample within n_batch has to be returned given an index
         # n_batch, sample_in_batch = divmod(index, self.batch_size)
+        chords = self.data[index][:, 0]
+        features = self.data[index][:, 1:]
 
-        data = torch.from_numpy(self.data[index][:-1])
-        target = torch.from_numpy(self.data[index][1:])
+        # TODO: Put a certain batch size? For now it's one
+        #  - Do expand_dim to chords because this is not considered when creating dataset
+        # TODO: All sequence or chords[:-1] for first parameter??
+        chords_torch = torch.from_numpy(np.expand_dims(chords, axis=0))
+        target = torch.from_numpy(chords[1:])
+        features_torch = torch.from_numpy(features)
 
-        if self.verbose:
-            print('Data size: ', data.size())
-
-        return chords, target, features
+        return chords_torch, target, features_torch
 
     def __len__(self):
         return self.length
