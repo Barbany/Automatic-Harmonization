@@ -42,6 +42,7 @@ class FolderDataset(Dataset):
 
             with open(mapping_file, "r") as infile:
                 mapping = json.load(infile)
+                self.vocabulary_size = len(mapping['chord'])
 
             if self.verbose:
                 print('Extracting chords from: ', clean_data_file)
