@@ -100,6 +100,8 @@ class FolderDataset(Dataset):
                 # Get random indices
                 random_phrases = np.random.permutation(num_phrases)
 
+                df_model = df.drop('mov', 1)
+
                 from_ = 0
                 for part_idx, part in enumerate(partitions):
                     to = from_ + int(np.round(num_phrases * partitions[part] / 100))
@@ -108,6 +110,7 @@ class FolderDataset(Dataset):
                     # Prellocate numpy array (phrases x sequence index x label and features)
                     # We now fill it with sentinel (infinity value) to avoid doing padding every time
                     part_data = np.ones(((to - from_ + 1), longest_sequence, len(df.columns))) * float(self.vocabulary_size)
+                    part_data = part_data.reshape(-1, len_seq_phrase, len(df_model.columns))
 
                     if self.verbose:
                         print('Data for', part, 'partition has shape', part_data.shape)
@@ -147,7 +150,7 @@ class FolderDataset(Dataset):
                     df_model = df.drop('mov', 1)
                     padding_size = len_seq_phrase - (to - from_) % len_seq_phrase
                     padding = np.ones((padding_size, len(df_model.columns)), dtype=float)
-                    part_data = np.array(df_model[from_:to])
+                    part_data = np.array(df_model[from_:to], dtype=float)
                     part_data = np.concatenate((part_data, padding), axis=0)
                     part_data = part_data.reshape(-1, len_seq_phrase, len(df_model.columns))
                     np.save(npy_files[part_idx], part_data)
