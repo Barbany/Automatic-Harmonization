@@ -27,6 +27,8 @@ def main(**params):
 
     # Check if GPU acceleration is available
     use_cuda = torch.cuda.is_available()
+    if use_cuda:
+        print('Model will be trained with GPU acceleration')
 
     # Set random seed to both numpy and torch (with/out CUDA)
     init_random_seed(params['seed'], use_cuda)
@@ -69,10 +71,10 @@ def main(**params):
     # Initiate model and move it to the GPU if possible
     if use_cuda:
         model = RNN(vocabulary_size, params['embedding_size'], num_features, params['rnn_input_size'],
-                    params['hidden_size'], use_cuda).cuda()
+                    params['hidden_size'], writer, use_cuda).cuda()
     else:
         model = RNN(vocabulary_size, params['embedding_size'], num_features, params['rnn_input_size'],
-                    params['hidden_size'], use_cuda)
+                    params['hidden_size'], writer, use_cuda)
 
     # Define loss function
     criterion = torch.nn.CrossEntropyLoss()

@@ -47,7 +47,7 @@ def setup_results_dir(params):
 
 
 def tee_stdout(log_path):
-    log_file = open(log_path, 'a', 1)
+    log_file = open(log_path, 'w', 1)
     stdout = sys.stdout
 
     class Tee:

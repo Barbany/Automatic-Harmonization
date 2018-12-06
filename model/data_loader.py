@@ -174,12 +174,10 @@ class FolderDataset(Dataset):
         # Compute which sample within n_batch has to be returned given an index
         # n_batch, sample_in_batch = divmod(index, self.batch_size)
         chords = self.data[index][:, 0]
-        features = self.data[index][:, 1:]
+        features = self.data[index][1:, 1:]
 
         # TODO: Put a certain batch size? For now it's one
-        #  - Do expand_dim to chords because this is not considered when creating dataset
-        # TODO: All sequence or chords[:-1] for first parameter??
-        chords_torch = torch.from_numpy(np.expand_dims(chords, axis=0))
+        chords_torch = torch.from_numpy(chords[:-1])
         target = torch.from_numpy(chords[1:])
         features_torch = torch.from_numpy(features)
 
