@@ -42,6 +42,7 @@ class FolderDataset(Dataset):
 
             with open(mapping_file, "r") as infile:
                 mapping = json.load(infile)
+                self.vocabulary_size = len(mapping['chord'])
 
             if self.verbose:
                 print('Extracting chords from: ', clean_data_file)
@@ -89,28 +90,35 @@ class FolderDataset(Dataset):
 
                 len_accum = []
                 accum = 0
-                for i in range(num_phrases):
-                    accum += phrases[i]["length"]
+                for rand_idx in random_phrases:
+                    accum += phrases[rand_idx]["length"]
                     len_accum.append(accum)
 
                 from_ = 0
+                last_n_part = 0
                 for part_idx, part in enumerate(partitions):
-                    n_part = from_ + int(np.round(num_chords * partitions[part] / 100))
-                    if n_part not in len_accum:
+                    n_part = last_n_part + int(np.round(num_chords * partitions[part] / 100))
+                    if n_part not in len_accum and part != 'test':
                         closest_n, to = self.__find_nearest(len_accum, n_part)
+                        n_part = closest_n
+                    if part == 'test':
+                        to = len(len_accum)
+                        n_part = num_chords - 1
                     if self.verbose:
                         print('Select random phrases from ', from_, ' to ', to)
 
                     # Prellocate numpy array (phrases x sequence index x label and features)
                     # We now fill it with sentinel (infinity value) to avoid doing padding every time
-                    padding_size = len_phrase - (closest_n) % len_phrase
-                    part_data = np.ones((closest_n + padding_size, len(df_model.columns)), dtype=float) * float(self.vocabulary_size)
+                    padding_size = len_phrase - (n_part - last_n_part) % len_phrase
+                    padding = np.ones((padding_size, len(df_model.columns)), dtype=float) * float(self.vocabulary_size)
+                    part_data = np.empty((0, len(df_model.columns)), dtype=float)
 
-                    for phrase_num, phrase_idx in enumerate(random_phrases[from_: to]):
+                    for phrase_num, phrase_idx in enumerate(random_phrases[from_: to + 1]):
                         phrase = phrases[phrase_idx]
-                        aux = df[phrase["from"]: phrase["to"]].values
-                        part_data[phrase_num, range(len(aux))] = aux
+                        aux = np.asarray(df_model[phrase["from"]: phrase["to"]], dtype=float)
+                        part_data = np.concatenate((part_data, aux), axis=0)
 
+                    part_data = np.concatenate((part_data, padding), axis=0)
                     part_data = part_data.reshape(-1, len_phrase, len(df_model.columns))
 
                     if self.verbose:
@@ -118,9 +126,10 @@ class FolderDataset(Dataset):
 
                     # Save numpy files
                     np.save(npy_files[part_idx], part_data)
-                    print('Dataset created for ' + part + ' partition', '-' * 60, '\n')
+                    print('Dataset created for ' + part + ' partition\n' + '-' * 60, '\n')
 
-                    from_ = to
+                    from_ = to + 1
+                    last_n_part = n_part
 
                 if self.verbose:
                     print('There are still ' + str(num_phrases - from_) + ' phrases unassigned for rounding issues')
@@ -152,7 +161,7 @@ class FolderDataset(Dataset):
                     part_data = part_data.reshape(-1, len_seq_phrase, len(df_model.columns))
                     np.save(npy_files[part_idx], part_data)
                     if self.verbose:
-                        print('Dataset created for ' + part + ' partition\n', '-' * 60, '\n')
+                        print('Dataset created for ' + part + ' partition\n' + '-' * 60, '\n')
 
                     from_ = to
 
@@ -164,7 +173,7 @@ class FolderDataset(Dataset):
         self.length = self.data.shape[0]
 
         print('Data shape:', self.data.shape)
-        print('Dataset loaded for ' + partition + ' partition\n', '-' * 60, '\n')
+        print('Dataset loaded for ' + partition + ' partition\n' + '-' * 60, '\n')
 
 
     def __getitem__(self, index):
