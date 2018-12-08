@@ -11,7 +11,7 @@ import os
 
 class FolderDataset(Dataset):
 
-    def __init__(self, path, split_by_phrase, len_seq_phrase, len_phrase, partition, partitions, verbose=False):
+    def __init__(self, path, split_by_phrase, len_seq_phrase, len_phrase, partition, partitions, batch_size, verbose=False):
         super().__init__()
 
         # Define TSV for clean data and JSON files for mappings (numeral -> float) and for phrase delimiters
@@ -179,14 +179,15 @@ class FolderDataset(Dataset):
     def __getitem__(self, index):
         # Compute which sample within n_batch has to be returned given an index
         # n_batch, sample_in_batch = divmod(index, self.batch_size)
+        chords = self.data[index][:, 0]
+        features = self.data[index][1:, 1:]
 
-        data = torch.from_numpy(self.data[index][:-1])
-        target = torch.from_numpy(self.data[index][1:])
+        # TODO: Put a certain batch size? For now it's one
+        chords_torch = torch.from_numpy(chords[:-1])
+        target = torch.from_numpy(chords[1:])
+        features_torch = torch.from_numpy(features)
 
-        if self.verbose:
-            print('Data size: ', data.size())
-
-        return chords, target, features
+        return chords_torch, target, features_torch
 
     def __len__(self):
         return self.length
