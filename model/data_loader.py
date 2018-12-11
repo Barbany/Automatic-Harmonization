@@ -2,6 +2,7 @@ import torch
 from torch.utils.data import Dataset
 
 from preproc.clean_data import create_clean_file
+from utils.params import default_params
 
 import numpy as np
 import pandas as pd
@@ -10,7 +11,6 @@ import os
 
 
 class FolderDataset(Dataset):
-
     def __init__(self, path, split_by_phrase, len_seq_phrase, len_phrase, partition, partitions, batch_size, verbose=False):
         super().__init__()
 
@@ -155,10 +155,11 @@ class FolderDataset(Dataset):
                         to = num_chords
                     # We don't need the movement to train the model
                     padding_size = len_seq_phrase - (to - from_) % len_seq_phrase
-                    padding = np.ones((padding_size, len(df_model.columns)), dtype=float)
+                    padding = np.ones((padding_size, len(df_model.columns)), dtype=float) * float(self.vocabulary_size)
                     part_data = np.array(df_model[from_:to], dtype=float)
                     part_data = np.concatenate((part_data, padding), axis=0)
                     part_data = part_data.reshape(-1, len_seq_phrase, len(df_model.columns))
+
                     np.save(npy_files[part_idx], part_data)
                     if self.verbose:
                         print('Dataset created for ' + part + ' partition\n' + '-' * 60, '\n')

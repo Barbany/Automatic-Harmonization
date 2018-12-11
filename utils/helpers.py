@@ -47,7 +47,7 @@ def setup_results_dir(params):
 
 
 def tee_stdout(log_path):
-    log_file = open(log_path, 'a', 1)
+    log_file = open(log_path, 'w', 1)
     stdout = sys.stdout
 
     class Tee:
@@ -76,6 +76,7 @@ def make_data_loader(params):
     def data_loader(partition):
         dataset = FolderDataset(params['data_path'], params['split_by_phrase'], params['len_seq_phrase'],
                                 params['len_phrase'], partition, params['partitions'], params['verbose'])
+
 
         # Data loader. Combines a dataset and a sampler, and provides single- or multi-process iterators over the dataset.
         # Parameters: - shuffle (If Falseon't reshuffle data at every epoch)

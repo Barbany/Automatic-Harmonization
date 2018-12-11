@@ -1,3 +1,3 @@
 source activate deep
-python run.py --verbose --split_by_phrase
+python run.py --verbose
 source deactivate

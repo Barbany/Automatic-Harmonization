@@ -3,8 +3,8 @@ import torch
 
 class RNN(torch.nn.Module):
 
-    def __init__(self, vocabulary_size, embedding_size, hidden_size, use_cuda, layers=1, dropout_prob=0,
-                 bidirectional=False, batch_first=False):
+    def __init__(self, vocabulary_size, embedding_size, num_features, rnn_input_size, hidden_size, writer,
+                 use_cuda, layers=3, dropout_prob=0, bidirectional=False, batch_first=False):
         """
         Recurrent Neural Network with LSTM
         :param vocabulary_size: Number of different chords
@@ -24,19 +24,42 @@ class RNN(torch.nn.Module):
         self.num_layers = layers
         self.hidden_size = hidden_size
         self.cuda = use_cuda
+        self.vocabulary_size = vocabulary_size
+        
+        # Visualization with Tensorboard
+        self.writer = writer
 
         # Define embedding layer
         self.embed = torch.nn.Embedding(vocabulary_size, embedding_size)
 
-        # Define LSTM
-        self.lstm = torch.nn.LSTM(embedding_size, self.hidden_size, self.num_layers, dropout=dropout_prob,
-                                batch_first=batch_first, bidirectional=bidirectional)
+        self.embed_expand = torch.nn.Conv1d(
+            in_channels=embedding_size,
+            out_channels=rnn_input_size,
+            kernel_size=1
+        )
 
-        # Define dropout
-        self.drop = torch.nn.Dropout(dropout_prob)
+        self.cond_expand = torch.nn.Conv1d(
+            in_channels=num_features,
+            out_channels=rnn_input_size,
+            kernel_size=1
+        )
+
+        # Define LSTM
+        self.lstm = torch.nn.LSTM(
+            rnn_input_size,
+            self.hidden_size,
+            self.num_layers,
+            dropout=dropout_prob,
+            batch_first=batch_first,
+            bidirectional=bidirectional
+        )
 
         # Define output layer: Fully Connected
+        # self.writer.add_embedding(features, metadata=x[0])
         self.fc = torch.nn.Linear(self.hidden_size,vocabulary_size)
+
+        # Define softmax layer to convert output of FC into probabilities
+        self.softmax = torch.nn.Softmax(1)
 
         # Init weights
         init_range = 0.1
@@ -46,21 +69,55 @@ class RNN(torch.nn.Module):
 
         return
 
-    def forward(self, x, h):
-        # Apply embedding (encoding)
-        y = self.embed(x[0])
+    def forward(self, x, cond, h):
+        # Internal level of verbosity. Only suggested for debugging purposes
+        verbose = False
+
+        # Apply embedding (encoding). Data type has to be casted to long before it
+        # Size: [batch_size, chord_seq_len, embedding_size]
+        x_embedded = self.embed(x.long())
+        if verbose:
+            print('\n', '*'*60)
+            print('Chords before embedding have size', x.size())
+            print('Chords after embedding have size', x_embedded.size())
+
+        # Apply 1D-Convolution to both the embedding and the features
+        # Input size is of the form [batch_size, channels_in, length_in]
+        # ** Note that embedding has length and channels reversed - Need to permute **
+        # Output size: [batch_size, channels_out, length_out]
+        x_input_rnn = self.embed_expand(x_embedded.permute(0, 2, 1)).permute(0, 2, 1)
+        cond_input_rnn = self.cond_expand(cond.float().permute(0, 2, 1)).permute(0, 2, 1)
+        if verbose:
+            print('Features before 1D-Conv have size', cond.size())
+            print('Features after 1D-Conv have size', cond_input_rnn.size())
+            print('Chords after 1D-Conv have size', x_input_rnn.size())
+
+        # Add features to condition input of RNN
+        x_input_rnn += cond_input_rnn
         
         # Run LSTM
-        y = self.drop(y)
-        y, h = self.lstm(y,h)
-        y = self.drop(y)
+        y, h = self.lstm(x_input_rnn, h)
+        if verbose:
+            print('Output of LSTM has size', y.size())
+
         # Reshape
-        y = y.contiguous().view(-1,self.hidden_size)
+        y = y.contiguous().view(-1, self.hidden_size)
+
         # Fully-connected (decoding)
         y = self.fc(y)
-        # Return prediction and states
-        return y,h
+        if verbose:
+            print('Output of Fully Connected layer has size', y.size())
 
+        # Apply Softmax layer
+        y = self.softmax(y.view(1, -1, self.vocabulary_size))
+
+        # Return prediction (most probable class in form of float) and states.
+        y_pred = y.view(-1, self.vocabulary_size)
+        if verbose:
+            print(y_pred)
+        return y_pred, h
+
+    ## Functions with internal calls of pytorch library
     def get_initial_states(self, batch_size):
         # Set initial hidden and memory states to 0
         if self.cuda:
