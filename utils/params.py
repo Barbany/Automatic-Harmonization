@@ -16,11 +16,10 @@ default_params = {
     'learning_rate': 0.1,
     'num_epochs': 100,
     'anneal_factor': 2.0,
-    'len_seq_phrase': 50,
+    'batch_size': 20,
+    'len_seq_phrase': 50,   # length of the phrases in the approach of sequential split
     'clip_norm': 0.25,
-    'num_features': 3,
-    'rnn_input_size': 20,
-    'batch_size': 1
+    'len_phrase': 50    # length of phrases in the approach with randomized phrases (the complete phrases are too long)
 }
 
 
