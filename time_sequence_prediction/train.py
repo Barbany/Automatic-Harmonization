@@ -3,9 +3,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import numpy as np
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
+from tensorboardX import SummaryWriter
 
 class Sequence(nn.Module):
     def __init__(self):
@@ -40,21 +38,26 @@ if __name__ == '__main__':
     # set random seed to 0
     np.random.seed(0)
     torch.manual_seed(0)
+
     # load data and make training set
     data = torch.load('traindata.pt')
     input = torch.from_numpy(data[3:, :-1])
     target = torch.from_numpy(data[3:, 1:])
     test_input = torch.from_numpy(data[:3, :-1])
     test_target = torch.from_numpy(data[:3, 1:])
+
+    # tensorboard
+    writer = SummaryWriter(log_dir='../results/tboard/')
+
     # build the model
     seq = Sequence()
     seq.double()
     criterion = torch.nn.CrossEntropyLoss()
     # criterion = nn.MSELoss()
     # use LBFGS as optimizer since we can load the whole data to train
-    optimizer = optim.Adam(seq.parameters(), lr=0.1)
+    optimizer = optim.Adam(seq.parameters(), lr=0.01)
     #begin to train
-    for i in range(3):
+    for i in range(500):
         print('STEP: ', i)
         def closure():
             optimizer.zero_grad()
@@ -62,6 +65,8 @@ if __name__ == '__main__':
             loss = criterion(out.view(-1, out.size(2)), target.contiguous().view(-1).long())
             print('loss:', loss.item())
             loss.backward()
+            # tensorboard
+            writer.add_scalar('train_loss', loss, i)
             return loss
         optimizer.step(closure)
         # begin to predict, no need to track gradient here
@@ -71,20 +76,8 @@ if __name__ == '__main__':
             y_pred = pred[:, :-future].contiguous().view(-1, pred.size(2))
             y = test_target.contiguous().view(-1).long()
             loss = criterion(y_pred, y)
+            writer.add_scalar('test_loss', loss, i)
             print('test loss:', loss.item())
             y = pred.detach().numpy()
-        # draw the result
-        plt.figure(figsize=(30,10))
-        plt.title('Predict future values for time sequences\n(Dashlines are predicted values)', fontsize=30)
-        plt.xlabel('x', fontsize=20)
-        plt.ylabel('y', fontsize=20)
-        plt.xticks(fontsize=20)
-        plt.yticks(fontsize=20)
-        def draw(yi, color):
-            plt.plot(np.arange(input.size(1)), yi[:input.size(1)], color, linewidth = 2.0)
-            plt.plot(np.arange(input.size(1), input.size(1) + future), yi[input.size(1):], color + ':', linewidth = 2.0)
-        draw(y[0], 'r')
-        draw(y[1], 'g')
-        draw(y[2], 'b')
-        plt.savefig('predict%d.pdf'%i)
-        plt.close()
+
+    writer.close()
