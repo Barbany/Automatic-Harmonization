@@ -1,6 +1,48 @@
 import sys
 import torch
 
+class Sequence(torch.nn.Module):
+    def __init__(self, hidden_size, vocabulary_size, input_size=1):
+        # Modify input size if we are dealing with embeddings
+        super(Sequence, self).__init__()
+
+        self.hidden_size = hidden_size
+        self.vocabulary_size = vocabulary_size
+
+        self.lstm1 = torch.nn.LSTMCell(input_size=input_size, 
+                                      hidden_size=self.hidden_size)
+        self.lstm2 = torch.nn.LSTMCell(input_size=hidden_size, 
+                                      hidden_size=self.hidden_size)
+        self.linear = torch.nn.Linear(self.hidden_size, self.vocabulary_size)
+
+        # Define softmax layer to convert output of FC into probabilities (Convert to pdf along dimension 0)
+        self.softmax = torch.nn.Softmax(dim=1)
+
+    def forward(self, input, writer=None, future = 0):
+        outputs = []
+        batch_size = input.size(0)
+
+        h_t = torch.zeros(batch_size, self.hidden_size, dtype=torch.double)
+        c_t = torch.zeros(batch_size, self.hidden_size, dtype=torch.double)
+        h_t2 = torch.zeros(batch_size, self.hidden_size, dtype=torch.double)
+        c_t2 = torch.zeros(batch_size, self.hidden_size, dtype=torch.double)
+
+        for input_t in input.chunk(input.size(1), dim=1):
+            h_t, c_t = self.lstm1(input_t, (h_t, c_t))
+            h_t2, c_t2 = self.lstm2(h_t, (h_t2, c_t2))
+            output = self.linear(h_t)
+            output = self.softmax(output)
+            outputs += [output]
+        for _ in range(future):# if we should predict the future
+            output = torch.argmax(output, dim=1).view(-1, 1).double()
+            h_t, c_t = self.lstm1(output, (h_t, c_t))
+            h_t2, c_t2 = self.lstm2(h_t, (h_t2, c_t2))
+            output = self.linear(output)
+            output = self.softmax(output)
+            outputs += [output]
+        outputs = torch.stack(outputs, 1).squeeze(2)
+        return outputs
+
 class RNN(torch.nn.Module):
 
     def __init__(self, vocabulary_size, embedding_size, num_features, rnn_input_size, hidden_size, writer,

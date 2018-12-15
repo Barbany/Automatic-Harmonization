@@ -178,8 +178,6 @@ class FolderDataset(Dataset):
 
 
     def __getitem__(self, index):
-        # Compute which sample within n_batch has to be returned given an index
-        # n_batch, sample_in_batch = divmod(index, self.batch_size)
         chords = self.data[index][:, 0]
         features = self.data[index][1:, 1:]
 

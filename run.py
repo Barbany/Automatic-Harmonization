@@ -9,7 +9,7 @@ from tensorboardX import SummaryWriter
 from utils.params import parse_arguments, default_params
 from utils.helpers import init_random_seed, setup_results_dir, tee_stdout, make_data_loader
 from model.trainer import train, evaluate
-from model.rnn import RNN
+from model.rnn import RNN, Sequence
 
 import numpy as np
 import os
@@ -70,17 +70,18 @@ def main(**params):
 
     # Initiate model and move it to the GPU if possible
     if use_cuda:
-        model = RNN(vocabulary_size, params['embedding_size'], num_features, params['rnn_input_size'],
-                    params['hidden_size'], writer, use_cuda).cuda()
+        model = Sequence(params['hidden_size'], vocabulary_size).cuda()
     else:
-        model = RNN(vocabulary_size, params['embedding_size'], num_features, params['rnn_input_size'],
-                    params['hidden_size'], writer, use_cuda)
+        model = Sequence(params['hidden_size'], vocabulary_size)
+
+    # Get model with double type to avoid changing the input parameters
+    model.double()
 
     # Define loss function
     criterion = torch.nn.CrossEntropyLoss()
 
     # Define optimizer
-    optimizer=torch.optim.SGD(model.parameters(), lr=params['learning_rate'])
+    optimizer = torch.optim.Adam(model.parameters(), lr=params['learning_rate'])
 
     print('-'*22 + ' Start training ' + '-'*22)
 
@@ -88,24 +89,24 @@ def main(**params):
     best_val_loss = np.inf
     for e in tqdm(range(params['num_epochs']), desc='Epoch', ncols=100, ascii=True):
         # Train
-        model = train(data_train, model, criterion, optimizer, params, use_cuda)
-        train_loss = evaluate(data_train, model, criterion, params, use_cuda)
+        train_loss, model = train(data_train, model, criterion, optimizer, writer, use_cuda)
 
         # Validation
-        val_loss = evaluate(data_validation, model, criterion, params, use_cuda)
+        val_loss = evaluate(data_validation, model, criterion, writer, use_cuda)
 
-        # Anneal learning rate
-        if val_loss < best_val_loss:
-            best_val_loss = val_loss
-        else:
-            lr /= params['anneal_factor']
-            optimizer = torch.optim.SGD(model.parameters(), lr=lr)
+        if params['adaptive_lr']:
+            if val_loss < best_val_loss:
+                best_val_loss = val_loss
+            else:
+                lr /= params['anneal_factor']
+                optimizer = torch.optim.Adam(model.parameters(), lr=params['learning_rate'])
 
         # Test
-        test_loss = evaluate(data_test, model, criterion, params, use_cuda)
+        test_loss = evaluate(data_test, model, criterion, writer, use_cuda)
 
         # Report
-        msg = 'Epoch %d: \tValid loss=%.4f \tTest loss=%.4f \tTest perplexity=%.1f'%(e+1,val_loss,test_loss,np.exp(test_loss))
+        msg = 'Epoch %d: \tTrain loss=%.4f \tValidation loss=%.4f \tTest loss=%.4f \tTest perplexity=%.1f'%(
+            e+1,train_loss, val_loss,test_loss,np.exp(test_loss))
         tqdm.write(msg)
         writer.add_scalars('data/loss', {'train': train_loss,
                                          'validation': val_loss,

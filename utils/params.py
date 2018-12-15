@@ -12,11 +12,11 @@ default_params = {
         'test': 20
         },
     'embedding_size': 7,    # Hypothesis: 7 (number of notes) or 12 (tones in equal temperament) --- Add special value for empty sequence?
-    'hidden_size': 6,
+    'hidden_size': 51,
     'learning_rate': 0.1,
     'num_epochs': 100,
     'anneal_factor': 2.0,
-    'batch_size': 20,
+    'adaptive_lr': False,
     'len_seq_phrase': 50,   # length of the phrases in the approach of sequential split
     'clip_norm': 0.25,
     'len_phrase': 50    # length of phrases in the approach with randomized phrases (the complete phrases are too long)
