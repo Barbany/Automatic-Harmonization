@@ -7,22 +7,23 @@ from tensorboardX import SummaryWriter
 
 import json
 
-VOCAB_SIZE = 282
+VOCAB_SIZE = 283
 EMBED_SIZE = 7
 EPOCHS = 500
 
 class Sequence(nn.Module):
-    def __init__(self, vocabulary_size, hidden_size, input_size=1):
+    def __init__(self, vocabulary_size, hidden_size, embed_size, input_size=1):
         super(Sequence, self).__init__()
 
         self.vocabulary_size = vocabulary_size
         self.hidden_size = hidden_size
         self.input_size = input_size
+        self.embed_size = embed_size
 
-        self.embed = torch.nn.Embedding(VOCAB_SIZE, EMBED_SIZE) # 2 words in vocab, 5 dimensional embeddings
-        self.lstm1 = nn.LSTMCell(EMBED_SIZE, 51)
-        self.lstm2 = nn.LSTMCell(51, 51)
-        self.linear = nn.Linear(51, VOCAB_SIZE) # make it with our vocabulary size
+        self.embed = torch.nn.Embedding(self.vocabulary_size, self.embed_size) # 2 words in vocab, 5 dimensional embeddings
+        self.lstm1 = nn.LSTMCell(self.embed_size, self.hidden_size)
+        self.lstm2 = nn.LSTMCell(self.hidden_size, self.hidden_size)
+        self.linear = nn.Linear(self.hidden_size, self.vocabulary_size) # make it with our vocabulary size
 
 
     def forward(self, input, future = 0):
@@ -67,6 +68,7 @@ class Sequence(nn.Module):
 
         writer.add_embedding(self.embed(input.long()), metadata=labels)
 
+
 if __name__ == '__main__':
 
     print('*' * 20 + ' Start Harmonic Sequence Predictor ' + '*' * 20)
@@ -92,7 +94,7 @@ if __name__ == '__main__':
     writer = SummaryWriter(log_dir='../results/tboard/embeddings')
 
     # build the model
-    seq = Sequence(283, 51)
+    seq = Sequence(283, 51, 7)
     seq.double()
     criterion = torch.nn.CrossEntropyLoss()
     # criterion = nn.MSELoss()
