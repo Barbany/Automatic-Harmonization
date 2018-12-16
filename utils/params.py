@@ -13,7 +13,7 @@ default_params = {
         },
     'embedding_size': 7,    # Hypothesis: 7 (number of notes) or 12 (tones in equal temperament) --- Add special value for empty sequence?
     'hidden_size': 51,
-    'learning_rate': 0.1,
+    'learning_rate': 0.01,
     'num_epochs': 100,
     'anneal_factor': 2.0,
     'adaptive_lr': False,
@@ -45,6 +45,10 @@ def parse_arguments():
              ' with respect to the maximum length. This allows to randomize partitions. If this parameter'
              ' is not provided, the sequences will be considered as continuous (resets between change of'
              ' movements and quartets) and reshaped as if they had the average sequence length.', default=False
+    )
+    parser.add_argument(
+        '--embedding', action='store_false',
+        help='When training the model, do not embed the chords. Instead, use directly the chords.', default=True
     )
     parser.set_defaults(**default_params)
 
