@@ -100,7 +100,10 @@ if __name__ == '__main__':
         'embedding': 7,
         'epochs': 500,
         'conditioner': True,
-        'input_rnn_size': 40
+        'input_rnn_size': 40,
+        'Tm': 50, # Maximum number of iterations.
+        'lr_controller': True,
+        'gradient_clip': 0.25
     }
 
     np.random.seed(123)
@@ -116,8 +119,6 @@ if __name__ == '__main__':
     data_test = np.load('../data/test_sequential_clean_data.npy')
     test_input = torch.from_numpy(data_test[:, :-1])
     test_target = torch.from_numpy(data_test[:, 1:, 0])
-
-    print('Shape of input', input.shape)
 
     mapping_file = '../data/mappings.json'
     with open(mapping_file, "r") as infile:
@@ -147,16 +148,24 @@ if __name__ == '__main__':
 
     optimizer = optim.Adam(seq.parameters(), lr=0.01)
 
+    if params['lr_controller']:
+        scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, params['Tm'], eta_min=0)
+
     #begin to train
     for i in range(params['epochs']):
         print('STEP: ', i)
 
         def closure():
+            if params['lr_controller']:
+                scheduler.step()
             optimizer.zero_grad()
             out = seq(input[:, :, 0], input[:, :, 1:])
             loss = criterion(out.view(-1, out.size(2)), target.contiguous().view(-1).long())
             print('loss:', loss.item())
             loss.backward()
+
+            if params['gradient_clip'] is not None:
+                torch.nn.utils.clip_grad_norm_(seq.parameters(), params['gradient_clip'])
 
             # tensorboard
             writer.add_scalar('train_loss', loss, i)
