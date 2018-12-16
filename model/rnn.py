@@ -1,47 +1,78 @@
 import sys
 import torch
+import torch.nn as nn
+import json
+
 
 class Sequence(torch.nn.Module):
-    def __init__(self, hidden_size, vocabulary_size, input_size=1):
-        # Modify input size if we are dealing with embeddings
+    def __init__(self, vocabulary_size, hidden_size, embedding, embed_size, input_size=1):
         super(Sequence, self).__init__()
 
-        self.hidden_size = hidden_size
         self.vocabulary_size = vocabulary_size
+        self.hidden_size = hidden_size
+        self.input_size = input_size
+        self.embedding = embedding
+        self.embed_size = embed_size
 
-        self.lstm1 = torch.nn.LSTMCell(input_size=input_size, 
-                                      hidden_size=self.hidden_size)
-        self.lstm2 = torch.nn.LSTMCell(input_size=hidden_size, 
-                                      hidden_size=self.hidden_size)
-        self.linear = torch.nn.Linear(self.hidden_size, self.vocabulary_size)
+        if self.embedding:
+            self.embed = torch.nn.Embedding(self.vocabulary_size, self.embed_size) # 2 words in vocab, 5 dimensional embeddings
+            self.lstm1 = nn.LSTMCell(self.embed_size, self.hidden_size)
+        else:
+            self.lstm1 = nn.LSTMCell(self.input_size, self.hidden_size)
 
-        # Define softmax layer to convert output of FC into probabilities (Convert to pdf along dimension 0)
-        self.softmax = torch.nn.Softmax(dim=1)
+        self.lstm2 = nn.LSTMCell(self.hidden_size, self.hidden_size)
+        self.linear = nn.Linear(self.hidden_size, self.vocabulary_size) # make it with our vocabulary size
+        self.softmax = nn.Softmax(dim=1)
 
-    def forward(self, input, writer=None, future = 0):
+    def forward(self, input, future = 0):
         outputs = []
         batch_size = input.size(0)
-
         h_t = torch.zeros(batch_size, self.hidden_size, dtype=torch.double)
         c_t = torch.zeros(batch_size, self.hidden_size, dtype=torch.double)
         h_t2 = torch.zeros(batch_size, self.hidden_size, dtype=torch.double)
         c_t2 = torch.zeros(batch_size, self.hidden_size, dtype=torch.double)
 
-        for input_t in input.chunk(input.size(1), dim=1):
-            h_t, c_t = self.lstm1(input_t, (h_t, c_t))
+
+        for i, input_t in enumerate(input.chunk(input.size(1), dim=1)):
+
+            if self.embedding:
+                x_embedded = self.embed(input_t.view(-1).long())
+                h_t, c_t = self.lstm1(x_embedded, (h_t, c_t))
+            else:
+                h_t, c_t = self.lstm1(input_t, (h_t, c_t))
+
             h_t2, c_t2 = self.lstm2(h_t, (h_t2, c_t2))
             output = self.linear(h_t2)
             output = self.softmax(output)
             outputs += [output]
-        for _ in range(future):# if we should predict the future
+
+        for i in range(future): # if we should predict the future
             output = torch.argmax(output, dim=1).view(-1, 1).double()
+
+            if self.embedding:
+                output = self.embed(output.view(-1).long())
+
             h_t, c_t = self.lstm1(output, (h_t, c_t))
             h_t2, c_t2 = self.lstm2(h_t, (h_t2, c_t2))
             output = self.linear(h_t2)
             output = self.softmax(output)
             outputs += [output]
+
         outputs = torch.stack(outputs, 1).squeeze(2)
         return outputs
+
+
+    def show_embedding(self, writer):
+
+        with open('../data/mappings.json', "r") as infile:
+            mapping = json.load(infile)
+
+        input = torch.FloatTensor(list(mapping['chord'].values()))
+        labels = list(mapping['chord'].keys())
+
+
+        writer.add_embedding(self.embed(input.long()), metadata=labels)
+
 
 class RNN(torch.nn.Module):
 

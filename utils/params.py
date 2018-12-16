@@ -46,6 +46,10 @@ def parse_arguments():
              ' is not provided, the sequences will be considered as continuous (resets between change of'
              ' movements and quartets) and reshaped as if they had the average sequence length.', default=False
     )
+    parser.add_argument(
+        '--embedding', action='store_false',
+        help='When training the model, do not embed the chords. Instead, use directly the chords.', default=True
+    )
     parser.set_defaults(**default_params)
 
     return parser.parse_args()
