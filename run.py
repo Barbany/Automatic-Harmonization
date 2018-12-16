@@ -45,10 +45,20 @@ def main(**params):
     # os.system('tensorboard --logdir=' + results_path + 'tboard &')
 
     # Get data for all partitions
-    data_loader = make_data_loader(params)
+    """data_loader = make_data_loader(params)
     data_train = data_loader('train')
     data_validation = data_loader('validation')
-    data_test = data_loader('test')
+    data_test = data_loader('test')"""
+    data = torch.load('time_sequence_prediction/traindata.pt')
+    input = torch.from_numpy(data[3:, :-1])
+    target = torch.from_numpy(data[3:, 1:])
+    test_input = torch.from_numpy(data[:3, :-1])
+    test_target = torch.from_numpy(data[:3, 1:])
+    data_train = [input, target, target]
+    data_validation = [test_input, test_target, test_target]
+    data_validation = [test_input, test_target, test_target]
+    data_test = [test_input, test_target, test_target]
+    data_test = [test_input, test_target, test_target]
 
     # Check vocabulary size and feature size. In the second case don't open file but only read header
     mapping_file = params['data_path'] + 'mappings.json'
@@ -99,6 +109,7 @@ def main(**params):
                 best_val_loss = val_loss
             else:
                 lr /= params['anneal_factor']
+                print('\nAdapting learning rate to', lr, '\n')
                 optimizer = torch.optim.Adam(model.parameters(), lr=params['learning_rate'])
 
         # Test
@@ -106,7 +117,7 @@ def main(**params):
 
         # Report
         msg = 'Epoch %d: \tTrain loss=%.4f \tValidation loss=%.4f \tTest loss=%.4f \tTest perplexity=%.1f'%(
-            e+1,train_loss, val_loss,test_loss,np.exp(test_loss))
+            e+1, train_loss, val_loss, test_loss, np.exp(test_loss))
         tqdm.write(msg)
         writer.add_scalars('data/loss', {'train': train_loss,
                                          'validation': val_loss,

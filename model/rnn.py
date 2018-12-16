@@ -30,14 +30,14 @@ class Sequence(torch.nn.Module):
         for input_t in input.chunk(input.size(1), dim=1):
             h_t, c_t = self.lstm1(input_t, (h_t, c_t))
             h_t2, c_t2 = self.lstm2(h_t, (h_t2, c_t2))
-            output = self.linear(h_t)
+            output = self.linear(h_t2)
             output = self.softmax(output)
             outputs += [output]
         for _ in range(future):# if we should predict the future
             output = torch.argmax(output, dim=1).view(-1, 1).double()
             h_t, c_t = self.lstm1(output, (h_t, c_t))
             h_t2, c_t2 = self.lstm2(h_t, (h_t2, c_t2))
-            output = self.linear(output)
+            output = self.linear(h_t2)
             output = self.softmax(output)
             outputs += [output]
         outputs = torch.stack(outputs, 1).squeeze(2)
