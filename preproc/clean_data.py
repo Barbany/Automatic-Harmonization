@@ -44,6 +44,8 @@ def create_clean_file(path, clean_data_file, mapping_file, verbose=False):
             mappings.update(dict({col: dict([(unique_label, float(idx))
                                               for idx, unique_label in enumerate(np.unique(df[col].values))])}))
 
+    # Add an extra value in chords mapping that corresponds to padding
+    mappings['chord'].update({'padding': float(len(mappings['chord']))})
     with open(mapping_file, 'w') as outfile:
         json.dump(mappings, outfile)
 

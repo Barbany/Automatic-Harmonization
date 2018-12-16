@@ -9,7 +9,6 @@ class Sequence(torch.nn.Module):
 
         self.hidden_size = hidden_size
         self.vocabulary_size = vocabulary_size
-        print(self.vocabulary_size)
 
         self.lstm1 = torch.nn.LSTMCell(input_size=input_size, 
                                       hidden_size=self.hidden_size)
@@ -35,6 +34,7 @@ class Sequence(torch.nn.Module):
             output = self.linear(h_t2)
             output = self.softmax(output)
             outputs += [output]
+
         for _ in range(future): # if we should predict the future
             output = torch.argmax(output, dim=1).view(-1, 1).double()
             h_t, c_t = self.lstm1(output, (h_t, c_t))
