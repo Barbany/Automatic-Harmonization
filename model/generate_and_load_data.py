@@ -10,7 +10,7 @@ import json
 import os
 
 
-def generate_data(path, split_by_phrase, len_seq_phrase, len_phrase, partitions, batch_size, verbose=False):
+def generate_data(path, split_by_phrase, len_seq_phrase, len_phrase, partitions, verbose=False):
 
     # Define TSV for clean data and JSON files for mappings (numeral -> float) and for phrase delimiters
     clean_data_file = path + 'clean_data.tsv'

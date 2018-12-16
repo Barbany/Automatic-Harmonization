@@ -1,21 +1,18 @@
 import json
 
 import torch
-from torch.autograd import Variable
-import torch.nn.init as init
 
 from tensorboardX import SummaryWriter
 
 from utils.params import parse_arguments, default_params
 from utils.helpers import init_random_seed, setup_results_dir, tee_stdout, make_data_loader
 from model.trainer import train, evaluate
-# from model.rnn import RNN, Sequence
 
 import numpy as np
 import os
 from tqdm import tqdm
 
-from time_sequence_prediction.train import Sequence
+from model.rnn import Sequence
 from model.generate_and_load_data import generate_data, load_data
 
 
@@ -162,14 +159,20 @@ def train(**params):
     num_features = features.shape[2]
 
     if verbose:
+        print('*' * 22 + ' TRAINING DETAILS ' + '*' * 22)
         print('Vocabulary size is', vocabulary_size, 'and number of features is', num_features)
-
+        if params['embedding']:
+            print('Using embedding with size', params['embedding_size'])
+        if params['split_by_phrase']:
+            print('Using approach of split by phrase (randomized) with phrases with a length of', params['len_phrase'])
+        else:
+            print('Using approach of sequential split with phrases with a length of', params['len_seq_phrase'])
 
     # Build the model and move it to the GOU is possible
     if use_cuda:
-        seq = Sequence(vocabulary_size, params['hidden_size']).cuda()
+        seq = Sequence(vocabulary_size, params['hidden_size'], params['embedding'], params['embedding_size']).cuda()
     else:
-        seq = Sequence(vocabulary_size, params['hidden_size'])
+        seq = Sequence(vocabulary_size, params['hidden_size'], params['embedding'], params['embedding_size'])
 
     seq.double()
     criterion = torch.nn.CrossEntropyLoss()
@@ -178,7 +181,7 @@ def train(**params):
     optimizer = torch.optim.Adam(seq.parameters(), lr=params['learning_rate'])
 
     # Begin to train
-    print('-' * 22 + ' Start training ' + '-' * 22)
+    print('\n' + '-' * 22 + ' Start training ' + '-' * 22)
 
     for i in tqdm(range(params['num_epochs']), desc='Epoch', ncols=100, ascii=True):
 
@@ -214,7 +217,7 @@ def train(**params):
         y_pred = pred.contiguous().view(-1, pred.size(2))
         y = test_target.contiguous().view(-1).long()
         loss = criterion(y_pred, y)
-        print('Test loss=' + loss.item())
+        print('Test loss =', loss.item())
 
 
 if __name__ == '__main__':
