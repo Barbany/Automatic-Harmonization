@@ -7,6 +7,8 @@ from tensorboardX import SummaryWriter
 from utils.params import parse_arguments, default_params
 from utils.helpers import init_random_seed, setup_results_dir, tee_stdout
 
+import numpy as np
+
 from tqdm import tqdm
 
 from model.rnn import Sequence
@@ -80,6 +82,8 @@ def main(**params):
     # Begin to train
     print('\n' + '-' * 22 + ' Start training ' + '-' * 22)
 
+    best_loss = np.inf
+
     for i in tqdm(range(params['num_epochs']), desc='Epoch', ncols=100, ascii=True):
 
         optimizer.zero_grad()
@@ -95,6 +99,10 @@ def main(**params):
             y_pred = pred.contiguous().view(-1, pred.size(2))
             y = val_target.contiguous().view(-1).long()
             val_loss = criterion(y_pred, y)
+
+        if val_loss < best_loss:
+            best_loss = val_loss
+            torch.save(seq.state_dict(), results_path + '/best_model.torch')
 
         # Tensorboard
         writer.add_scalars('data/loss', {'train': train_loss,
