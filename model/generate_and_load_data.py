@@ -36,7 +36,6 @@ def generate_data(path, split_by_phrase, len_seq_phrase, len_phrase, partitions,
 
         with open(mapping_file, "r") as infile:
             mapping = json.load(infile)
-            vocabulary_size = len(mapping['chord'])
 
         if verbose:
             print('Extracting chords from: ', clean_data_file)
@@ -101,10 +100,8 @@ def generate_data(path, split_by_phrase, len_seq_phrase, len_phrase, partitions,
                 if verbose:
                     print('Select random phrases from ', from_, ' to ', to)
 
-                # Prellocate numpy array (phrases x sequence index x label and features)
-                # We now fill it with sentinel (infinity value) to avoid doing padding every time
-                padding_size = len_phrase - (n_part - last_n_part) % len_phrase
-                padding = np.ones((padding_size, len(df_model.columns)), dtype=float) * mapping['chord']['padding']
+                # Truncate the data to avoid adding padding
+                truncate_size = (n_part - last_n_part) % len_phrase
                 part_data = np.empty((0, len(df_model.columns)), dtype=float)
 
                 for phrase_num, phrase_idx in enumerate(random_phrases[from_: to + 1]):
@@ -112,7 +109,7 @@ def generate_data(path, split_by_phrase, len_seq_phrase, len_phrase, partitions,
                     aux = np.asarray(df_model[phrase["from"]: phrase["to"]], dtype=float)
                     part_data = np.concatenate((part_data, aux), axis=0)
 
-                part_data = np.concatenate((part_data, padding), axis=0)
+                part_data = part_data[:-truncate_size]
                 part_data = part_data.reshape(-1, len_phrase, len(df_model.columns))
 
                 if verbose:
@@ -130,13 +127,11 @@ def generate_data(path, split_by_phrase, len_seq_phrase, len_phrase, partitions,
 
         else:
             # list with the indexes where there is a change of movement
-            # print("There are {} chords".format(num_chords))
             changes_mov = [0] + list(idx for idx, (i, j) in enumerate(zip(df['mov'], df['mov'][1:]), 1) if i != j)
-            # print("Changes of movement at {}".format(changes_mov))
 
+            # We don't need the movement to train the model
             df_model = df.drop('mov', 1)
 
-            # TODO: Take into account change of movement/quartet?
             from_ = 0
             for part_idx, part in enumerate(partitions):
                 to = from_ + int(np.round(num_chords * partitions[part] / 100))
@@ -147,11 +142,11 @@ def generate_data(path, split_by_phrase, len_seq_phrase, len_phrase, partitions,
                     to = closest_end_mov
                 if part == 'test':
                     to = num_chords
-                # We don't need the movement to train the model
-                padding_size = len_seq_phrase - (to - from_) % len_seq_phrase
-                padding = np.ones((padding_size, len(df_model.columns)), dtype=float) * mapping['chord']['padding']
+
+                # Truncate the data to avoid adding padding
+                truncate_size = (to - from_) % len_seq_phrase
                 part_data = np.array(df_model[from_:to], dtype=float)
-                part_data = np.concatenate((part_data, padding), axis=0)
+                part_data = part_data[:-truncate_size]
                 part_data = part_data.reshape(-1, len_seq_phrase, len(df_model.columns))
 
                 np.save(npy_files[part_idx], part_data)
