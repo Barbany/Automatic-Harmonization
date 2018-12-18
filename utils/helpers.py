@@ -5,6 +5,7 @@ import sys
 import torch
 import numpy as np
 from utils.params import default_params
+import csv
 
 
 tag_params = [
@@ -66,3 +67,28 @@ def init_random_seed(seed, cuda):
     torch.manual_seed(seed)
     if cuda:
         torch.cuda.manual_seed(seed)
+
+
+def save_test_losses_to_tsv(params):
+    """
+    This function computes the median, 1st and 3rd quantile, maximum and minimum value for the test losses ef each model
+    and save the date into a .csv in order to draw boxplots.
+    """
+    path = params['results_path'] + params['test_losses_path']
+    files = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
+
+    with open(path + 'boxplots_data.csv', 'w') as csvfile:
+        boxplots = csv.writer(csvfile, delimiter=',')
+        boxplots.writerow(['Name', 'First Quantile', 'Median', 'Third Quantile', 'Maximum', 'Minimum'])
+
+    for file in files:
+        if file.endswith(".npy"):
+            loss_array = np.load(path + file)
+            first_quant = np.quantile(loss_array, 0.25)
+            median = np.quantile(loss_array, 0.5)
+            third_quant = np.quantile(loss_array, 0.75)
+            max_value = np.amax(loss_array)
+            min_value = np.amin(loss_array)
+            with open(path + 'boxplots_data.csv', 'a') as csvfile:
+                boxplots = csv.writer(csvfile, delimiter=',')
+                boxplots.writerow([file[:-4], first_quant, median, third_quant, max_value, min_value])

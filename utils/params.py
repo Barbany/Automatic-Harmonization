@@ -5,6 +5,7 @@ import argparse
 default_params = {
     'data_path': 'data/',
     'results_path': 'results/',
+    'test_losses_path': 'test_losses_arrays/',
     'seed': 123,
     'partitions': {
         'train': 60,

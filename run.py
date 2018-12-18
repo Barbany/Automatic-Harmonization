@@ -5,9 +5,10 @@ import torch
 from tensorboardX import SummaryWriter
 
 from utils.params import parse_arguments, default_params
-from utils.helpers import init_random_seed, setup_results_dir, tee_stdout
+from utils.helpers import init_random_seed, setup_results_dir, tee_stdout, save_test_losses_to_tsv
 
 import numpy as np
+import os
 
 from tqdm import tqdm
 
@@ -48,7 +49,7 @@ def main(**params):
 
     # Generate data files if not created
     generate_data(params['data_path'], params['split_by_phrase'], params['len_seq_phrase'],
-                                params['len_phrase'], params['partitions'], params['verbose'])
+                  params['len_phrase'], params['partitions'], params['verbose'])
 
     # Load data and make training set
     input, target, features = load_data(params['data_path'], 'train', params['split_by_phrase'])
@@ -142,19 +143,19 @@ def main(**params):
     n_test = test_target.shape[0]
     # we divide the test dataset into 10 partitions to get more representative results
     k_test = 10
-    n_partition_test = int(np.round(n_test/k_test))
+    n_partition_test = int(np.round(n_test / k_test))
 
     test_losses = []
 
     for k in range(k_test):
-        if k != k_test-1:
-            test_input_part = test_input[k*n_partition_test:(k+1)*n_partition_test]
-            test_features_part = test_features[k*n_partition_test:(k+1)*n_partition_test]
-            test_target_part = test_target[k*n_partition_test:(k+1)*n_partition_test]
+        if k != k_test - 1:
+            test_input_part = test_input[k * n_partition_test:(k + 1) * n_partition_test]
+            test_features_part = test_features[k * n_partition_test:(k + 1) * n_partition_test]
+            test_target_part = test_target[k * n_partition_test:(k + 1) * n_partition_test]
         else:
-            test_input_part = test_input[k*n_partition_test:]
-            test_features_part = test_features[k*n_partition_test:]
-            test_target_part = test_target[k*n_partition_test:]
+            test_input_part = test_input[k * n_partition_test:]
+            test_features_part = test_features[k * n_partition_test:]
+            test_target_part = test_target[k * n_partition_test:]
 
         with torch.no_grad():
             pred = seq(test_input_part, test_features_part)
@@ -163,9 +164,18 @@ def main(**params):
             test_loss = criterion(y_pred, y)
             test_losses.append(test_loss)
 
+    # Save the array of test losses
+    path_losses = params['results_path'] + params['test_losses_path']
+    if not os.path.exists(path_losses):
+        os.makedirs(path_losses)
+    name_file = results_path.split('/')[1] + '.npy'
+    np.save(path_losses + name_file, test_losses)
+
     mean_test_loss = np.mean(test_losses)
     std_test_loss = np.std(test_losses)
     print('Test loss = %.4f +- %.4f' % (mean_test_loss, std_test_loss))
+
+    save_test_losses_to_tsv(params)
 
 
 if __name__ == '__main__':
