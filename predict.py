@@ -11,6 +11,7 @@ import numpy as np
 import pandas as pd
 
 from tqdm import tqdm
+import os
 
 from model.rnn import Sequence
 from model.generate_and_load_data import generate_data, load_data
@@ -23,6 +24,8 @@ def main(**params):
     )
 
     results_path = setup_results_dir(params)
+    if not os.path.exists(results_path + 'samples/'):
+        os.makedirs(results_path + 'samples/')
 
     # Check vocabulary size and feature size. In the second case don't open file but only read header
     mapping_file = params['data_path'] + 'mappings.json'
@@ -96,7 +99,10 @@ def main(**params):
 
     df = pd.read_csv(params['input_file'], sep='\t')
     df['chord'] = df['chord'].fillna(pd.Series(pred))
-    df.to_csv(params['output_file'], sep='\t', index=False)
+
+    out_file = results_path + 'samples/' + params['output_file']
+    df.to_csv(out_file, sep='\t', index=False)
+    print('The full chord sequence has been saved in', out_file)
 
 
 if __name__ == '__main__':
