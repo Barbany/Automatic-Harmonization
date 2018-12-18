@@ -9,7 +9,7 @@ import csv
 
 
 tag_params = [
-    'split_by_phrase', 'embedding', 'conditioner'
+    'split_by_phrase', 'embedding', 'conditioner', 'embedding_size'
     ]
 
 
@@ -25,7 +25,6 @@ def make_tag(params):
     return '-'.join(
         key + '__' + to_string(params[key])
         for key in tag_params
-        if key not in default_params or params[key] != default_params[key]
     )
 
 
