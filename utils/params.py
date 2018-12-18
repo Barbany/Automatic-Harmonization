@@ -89,10 +89,20 @@ def parse_arguments_prediction():
         help='When training the model, do not embed the chords. Instead, use directly the chords.', default=True
     )
     parser.add_argument(
+        '--conditioner', action='store_false',
+        help='When training the model, use features in addition to the chords. If not, use only the chords.'
+             'When using features, embedding of chords is always used.', default=True
+    )
+    parser.add_argument(
         '--input_file',
         help='Input file with the first chords and the features. If not provided, a prompt will ask for the desired length'
              ' and default features will be used.',
              default='example_input.tsv'
+             )
+    parser.add_argument(
+        '--output_file',
+        help='Output file to store the predicted chords.',
+             default='output.tsv'
              )
     parser.set_defaults(**default_params)
 
