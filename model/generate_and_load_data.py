@@ -165,7 +165,7 @@ def load_data(path, partition, split_by_phrase):
     print('Dataset loaded for ' + partition + ' partition\n' + '-' * 60, '\n')
 
     chords = data[:, :, 0]  # take only the chords
-    features = data[:, :, 1:]
+    features = torch.from_numpy(data[:, :, 1:])
     input = torch.from_numpy(chords[:, :-1])
     target = torch.from_numpy(chords[:, 1:])
 

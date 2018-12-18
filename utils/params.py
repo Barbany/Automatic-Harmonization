@@ -11,14 +11,15 @@ default_params = {
         'validation': 20,
         'test': 20
         },
-    'embedding_size': 7,    # Hypothesis: 7 (number of notes) or 12 (tones in equal temperament) --- Add special value for empty sequence?
+    'embedding_size': 7,    # Hypothesis: 7 (number of notes) or 12 (tones in equal temperament)
     'hidden_size': 51,
     'learning_rate': 0.01,
-    'num_epochs': 100,
-    'anneal_factor': 2.0,
-    'adaptive_lr': True,
+    'num_epochs': 500,
+    'input_rnn_size': 40,   # size of the output of the FCL (input of the RNN when training with features)
+    'Tm': 50,   # maximum number of iterations (of the learning rate scheduler)
+    'lr_controller': True,
+    'gradient_clip': 0.25,
     'len_seq_phrase': 50,   # length of the phrases in the approach of sequential split
-    'clip_norm': 0.25,
     'len_phrase': 50    # length of phrases in the approach with randomized phrases (the complete phrases are too long)
 }
 
@@ -37,7 +38,7 @@ def parse_arguments():
     parser.add_argument(
         '-V', '--verbose', dest='verbose', action='store_true',
         help='Provide additional details about the program. This level of detail'
-             ' can be very helpful for troubleshooting problems', default=False
+             ' can be very helpful for troubleshooting problems.', default=False
     )
     parser.add_argument(
         '--split_by_phrase', action='store_true',
@@ -49,6 +50,11 @@ def parse_arguments():
     parser.add_argument(
         '--embedding', action='store_false',
         help='When training the model, do not embed the chords. Instead, use directly the chords.', default=True
+    )
+    parser.add_argument(
+        '--conditioner', action='store_false',
+        help='When training the model, use features in addition to the chords. If not, use only the chords.'
+             'When using features, embedding of chords is always used.', default=True
     )
     parser.set_defaults(**default_params)
 

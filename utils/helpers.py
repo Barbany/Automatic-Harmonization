@@ -2,17 +2,13 @@
 
 import os
 import sys
-import shutil
 import torch
 import numpy as np
-from torch.utils.data import DataLoader
-
-from model.data_loader import FolderDataset
 from utils.params import default_params
 
 
 tag_params = [
-    'split_by_phrase', 'embedding_size', 'hidden_size'
+    'split_by_phrase', 'embedding', 'conditioner'
     ]
 
 
@@ -70,16 +66,3 @@ def init_random_seed(seed, cuda):
     torch.manual_seed(seed)
     if cuda:
         torch.cuda.manual_seed(seed)
-
-
-def make_data_loader(params):
-    def data_loader(partition):
-        dataset = FolderDataset(params['data_path'], params['split_by_phrase'], params['len_seq_phrase'],
-                                params['len_phrase'], partition, params['partitions'], params['verbose'])
-
-
-        # Data loader. Combines a dataset and a sampler, and provides single- or multi-process iterators over the dataset.
-        # Parameters: - shuffle (If Falseon't reshuffle data at every epoch)
-        #             - num_workers (Number of subprocesses to use for data loading - 0: default; increment if data loading slow)
-        return DataLoader(dataset, shuffle=False, num_workers=0)
-    return data_loader
