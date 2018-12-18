@@ -15,7 +15,7 @@ default_params = {
     'embedding_size': 7,    # Hypothesis: 7 (number of notes) or 12 (tones in equal temperament)
     'hidden_size': 51,
     'learning_rate': 0.01,
-    'num_epochs': 500,
+    'num_epochs': 1000,
     'input_rnn_size': 40,   # size of the output of the FCL (input of the RNN when training with features)
     'Tm': 50,   # maximum number of iterations (of the learning rate scheduler)
     'lr_controller': True,

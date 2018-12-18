@@ -1,6 +1,0 @@
-
-################# NOTES ON THE PROJECT #################
-
-- Approach sequential split: we will replace the column 'phrase_end' by a boolean value that indicates where the data of each partition ends (from that on, there is just padding)
-
-- 
