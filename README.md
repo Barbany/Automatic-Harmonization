@@ -48,6 +48,6 @@ You can see an example of Tensorboard outputs with the files provided in the roo
 #### Predict
 In order to predict you first have to train a model with any of the parameters. Then make sure to have the same parameters in the predict function (not that default parameters are common between `run.py` and `predict.py` but the parser is slightly different) and then run for example.
 
-    python predict.py --verbose --split_by_phrase
+    python predict.py --split_by_phrase
 
 This will use the provided example input file, but you can change it as well as choose the name of the generated .tsv file with the chords and the features if provided.
