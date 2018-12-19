@@ -4,12 +4,11 @@ import os
 import sys
 import torch
 import numpy as np
-from utils.params import default_params
 import csv
 
 
 tag_params = [
-    'split_by_phrase', 'embedding', 'conditioner'
+    'split_by_phrase', 'embedding', 'conditioner', 'embedding_size'
     ]
 
 
@@ -25,7 +24,6 @@ def make_tag(params):
     return '-'.join(
         key + '__' + to_string(params[key])
         for key in tag_params
-        if key not in default_params or params[key] != default_params[key]
     )
 
 
@@ -79,16 +77,16 @@ def save_test_losses_to_tsv(params):
 
     with open(path + 'boxplots_data.csv', 'w') as csvfile:
         boxplots = csv.writer(csvfile, delimiter=',')
-        boxplots.writerow(['Name', 'First Quantile', 'Median', 'Third Quantile', 'Maximum', 'Minimum'])
+        boxplots.writerow(['Name', 'First Quartile', 'Median', 'Third Quartile', 'Maximum', 'Minimum'])
 
     for file in files:
         if file.endswith(".npy"):
             loss_array = np.load(path + file)
-            first_quant = np.quantile(loss_array, 0.25)
+            first_quart = np.quantile(loss_array, 0.25)
             median = np.quantile(loss_array, 0.5)
-            third_quant = np.quantile(loss_array, 0.75)
+            third_quart = np.quantile(loss_array, 0.75)
             max_value = np.amax(loss_array)
             min_value = np.amin(loss_array)
             with open(path + 'boxplots_data.csv', 'a') as csvfile:
                 boxplots = csv.writer(csvfile, delimiter=',')
-                boxplots.writerow([file[:-4], first_quant, median, third_quant, max_value, min_value])
+                boxplots.writerow([file[:-4], first_quart, median, third_quart, max_value, min_value])
