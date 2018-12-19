@@ -104,12 +104,22 @@ def generate_data(path, split_by_phrase, len_seq_phrase, len_phrase, partitions,
                 truncate_size = (n_part - last_n_part) % len_phrase
                 part_data = np.empty((0, len(df_model.columns)), dtype=float)
 
-                for phrase_num, phrase_idx in enumerate(random_phrases[from_: to + 1]):
+                for phrase_idx in random_phrases[from_: to + 1]:
                     phrase = phrases[phrase_idx]
                     aux = np.asarray(df_model[phrase["from"]: phrase["to"]], dtype=float)
                     part_data = np.concatenate((part_data, aux), axis=0)
 
                 part_data = part_data[:-truncate_size]
+
+                # Normalize features
+                if part == 'train':
+                    mean_features = np.mean(part_data[:, 1:], axis=0)
+                    std_features = np.std(part_data[:, 1:], axis=0)
+                    print(mean_features)
+                    print(std_features)
+                
+                part_data[:, 1:] = (part_data[:, 1:] - mean_features) / std_features
+
                 part_data = part_data.reshape(-1, len_phrase, len(df_model.columns))
 
                 if verbose:

@@ -1,36 +1,48 @@
-chord	global_key	local_key	phraseend
-I	Eb	I	False
-V43	Eb	I	False
-I	Eb	I	False
-V2	Eb	I	False
-I6	Eb	I	False
-vi	Eb	I	False
-IV	Eb	I	True
-	Eb	I	False
-	Eb	I	False
-	Eb	I	False
-	Eb	I	False
-	Eb	I	False
-	Eb	I	False
-	Eb	I	False
-	Eb	I	False
-	Eb	I	False
-	Eb	I	False
-	Eb	I	False
-	Eb	I	False
-	Eb	I	False
-	Eb	I	False
-	C	I	False
-	C	I	False
-	C	I	False
-	C	I	False
-	C	I	False
-	C	I	True
-	C	V	False
-	C	V	False
-	C	V	False
-	C	V	False
-	C	I	False
-	C	I	True
-	C	I	False
-	C	I	False
+chord	altchord	length	global_key	local_key	pedal	form	figbass	changes	relativeroot	phraseend
+I	NaN	2.5	Eb	I	NaN	NaN	-1	NaN	NaN	False
+V43	NaN	1.5	Eb	I	NaN	NaN	43	NaN	NaN	False
+I	NaN	2.5	Eb	I	NaN	NaN	-1	NaN	NaN	False
+V2	NaN	1.5	Eb	I	NaN	NaN	2	NaN	NaN	False
+I6	NaN	1	Eb	I	NaN	NaN	6	NaN	NaN	False
+vi	NaN	1	Eb	I	NaN	NaN	-1	NaN	NaN	False
+IV	NaN	2	Eb	I	NaN	NaN	-1	NaN	NaN	True
+IV	NaN	1	Eb	I	NaN	NaN	-1	NaN	NaN	False
+ii6	NaN	1	Eb	I	NaN	NaN	6	NaN	NaN	False
+V2	NaN	1	Eb	I	NaN	NaN	2	NaN	NaN	False
+I6	NaN	2	Eb	I	NaN	NaN	6	NaN	NaN	False
+vi64	NaN	1	Eb	I	NaN	NaN	64	NaN	NaN	False
+ii7	NaN	2	Eb	I	NaN	NaN	7	NaN	NaN	False
+V43	NaN	1	Eb	I	NaN	NaN	43	NaN	NaN	False
+I6	NaN	1	Eb	I	NaN	NaN	6	7	NaN	False
+I6	NaN	1	Eb	I	NaN	NaN	6	NaN	NaN	False
+@none	NaN	1	Eb	I	NaN	NaN	-1	NaN	NaN	False
+IV	NaN	1	Eb	I	NaN	NaN	-1	NaN	NaN	False
+ii6	NaN	1	Eb	I	NaN	NaN	6	NaN	NaN	False
+V2	NaN	1	Eb	I	NaN	NaN	2	NaN	NaN	False
+V2	NaN	1	Eb	I	NaN	NaN	2	NaN	NaN	False
+	NaN	1	Eb	I	NaN	NaN	6	NaN	NaN	False
+	NaN	1	Eb	I	NaN	NaN	-1	NaN	NaN	False
+	NaN	1	Eb	I	NaN	NaN	7	NaN	NaN	False
+	NaN	1	Eb	I	NaN	NaN	43	NaN	NaN	False
+	NaN	0.5	Eb	I	NaN	NaN	6	NaN	NaN	False
+	NaN	0.5	Eb	I	NaN	o	-1	NaN	NaN	False
+	NaN	1	Eb	I	NaN	NaN	-1	NaN	NaN	True
+	NaN	1	Eb	I	NaN	NaN	43	NaN	NaN	False
+	NaN	1	Eb	I	NaN	NaN	6	NaN	NaN	False
+	NaN	2	Eb	I	NaN	NaN	6	NaN	NaN	False
+	NaN	1	Eb	I	NaN	NaN	2	NaN	NaN	False
+	NaN	2	Eb	I	NaN	NaN	6	NaN	NaN	False
+	NaN	1	Eb	I	NaN	NaN	64	NaN	NaN	False
+	NaN	3	Eb	I	NaN	NaN	43	NaN	NaN	False
+	NaN	1	Eb	I	NaN	NaN	6	4	NaN	False
+	NaN	1	Eb	I	NaN	NaN	6	NaN	NaN	False
+	NaN	1	Eb	I	NaN	+	6	NaN	NaN	False
+	NaN	1	Eb	I	NaN	NaN	-1	NaN	NaN	False
+	NaN	1	Eb	I	NaN	NaN	6	NaN	NaN	False
+	NaN	1	Eb	I	NaN	NaN	2	NaN	NaN	False
+	NaN	2	Eb	I	NaN	NaN	6	NaN	NaN	False
+	NaN	1	Eb	I	NaN	NaN	-1	NaN	NaN	False
+	NaN	1	Eb	I	NaN	NaN	64	NaN	NaN	False
+	NaN	1	Eb	I	NaN	NaN	-1	NaN	NaN	False
+	NaN	1	Eb	I	NaN	NaN	65	NaN	NaN	False
+	NaN	1	Eb	I	NaN	NaN	-1	NaN	NaN	False

@@ -12,7 +12,8 @@ def create_clean_file(path, clean_data_file, mapping_file, verbose=False):
     #   - Remove global and local key as they are kept as features
     #   - Keep end of phrase boolean
 
-    df = df[['chord', 'mov', 'global_key', 'local_key', 'phraseend']]
+    df = df[['chord', 'altchord', 'mov', 'length', 'global_key', 'local_key', 'pedal', 'form', 'figbass',
+        'changes', 'relativeroot', 'phraseend']]
 
     # Remove end of phrase
     df['chord'] = df['chord'].str.replace('\\\\\\\\', '')
@@ -27,14 +28,22 @@ def create_clean_file(path, clean_data_file, mapping_file, verbose=False):
     # If it is ".Eb" then the global key is false (atonal) and we want only the chord
     df['chord'] = df['chord'][keys_idx].str.split('.').str[-1]
 
-    # TODO: tests to see if we need to further reduce the size
-    # Optional: - remove relative foot '/' and changes (.)
-    #           - too many empty values to be kept as features
+    # Remove relative foot '/' and changes (.)
+    #  - too many empty values to be kept as features
     df['chord'] = df['chord'].str.split('/').str[0]         # relative foot
     df['chord'] = df['chord'].str.replace(r"\(.*\)", "")    # changes
 
     print("vocabulary size", df['chord'].nunique())
 
+    # Substitute NaN values (interpreted as numerals) by string
+    for col, type_ in df.dtypes.iteritems():
+        if df[col].isnull().any():
+            if type_ == np.object:
+                df[col] = df[col].fillna('NaN')
+            else:
+                df[col] = df[col].fillna(-1)
+
+    print(df.head())
     # Create mapping for all non-numerical (nor boolean) features
     mappings = {}
     for col, type_ in df.dtypes.iteritems():

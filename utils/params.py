@@ -8,20 +8,20 @@ default_params = {
     'test_losses_path': 'test_losses_arrays/',
     'seed': 123,
     'partitions': {
-        'train': 60,
-        'validation': 20,
-        'test': 20
+        'train': 80,
+        'validation': 10,
+        'test': 10
         },
     'embedding_size': 7,    # Hypothesis: 7 (number of notes) or 12 (tones in equal temperament)
     'hidden_size': 51,
     'learning_rate': 0.01,
     'num_epochs': 500,
-    'input_rnn_size': 40,   # size of the output of the FCL (input of the RNN when training with features)
+    'input_rnn_size': 20,   # size of the output of the FCL (input of the RNN when training with features)
     'Tm': 50,   # maximum number of iterations (of the learning rate scheduler)
-    'lr_controller': False,
-    'gradient_clip': None,
-    'len_seq_phrase': 50,   # length of the phrases in the approach of sequential split
-    'len_phrase': 50    # length of phrases in the approach with randomized phrases (the complete phrases are too long)
+    'lr_controller': True,
+    'gradient_clip': 0.5,
+    'len_seq_phrase': 30,   # length of the phrases in the approach of sequential split
+    'len_phrase': 20    # length of phrases in the approach with randomized phrases (the complete phrases are too long)
 }
 
 
