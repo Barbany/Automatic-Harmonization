@@ -90,3 +90,7 @@ def save_test_losses_to_tsv(params):
             with open(path + 'boxplots_data.csv', 'a') as csvfile:
                 boxplots = csv.writer(csvfile, delimiter=',')
                 boxplots.writerow([file[:-4], first_quart, median, third_quart, max_value, min_value])
+
+def accuracy_score(y, y_pred):
+    y_pred = torch.argmax(y_pred, dim=1).view(-1).long()
+    return (y == y_pred).float().sum() / float(len(y))
