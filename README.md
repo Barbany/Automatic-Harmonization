@@ -41,7 +41,7 @@ You can also modify other parameters specified with default values at `utils/par
 #### Tensorboard
 The log of all prints as well as the parameters of the best model and a `tensorboard` folder, will be in a folder named `results/experiment_name/`, where the `experiment_name` keyword will be substituted by a string that indicates the parameters of the experiment that affect data processing. In order to see the evolution of the loss curves and the embedding projections, you can run Tensorboard while your code is running to see either the live evolution or when it has already finished. In order to do so, just go the folder of one experiment and run the following command.
 
-    tensorboard --logdir='tboard'
+    tensorboard --logdir=tboard
 
 You can see an example of Tensorboard outputs with the files provided in the root folder of this repository.
 

@@ -5,7 +5,7 @@ import torch
 from tensorboardX import SummaryWriter
 
 from utils.params import parse_arguments, default_params
-from utils.helpers import init_random_seed, setup_results_dir, tee_stdout, save_test_losses_to_tsv
+from utils.helpers import init_random_seed, setup_results_dir, tee_stdout, save_test_losses_to_tsv, accuracy_score
 
 import numpy as np
 import os
@@ -14,7 +14,6 @@ from tqdm import tqdm
 
 from model.rnn import Sequence
 from model.generate_and_load_data import generate_data, load_data
-
 
 def main(**params):
     params = dict(
@@ -132,8 +131,12 @@ def main(**params):
         writer.add_scalars('data/loss', {'train': train_loss,
                                          'validation': val_loss}, i)
 
+        # Accuracy
+        accuracy = accuracy_score(y, y_pred)
+        writer.add_scalar('accuracy', accuracy, i)
+
         # Report
-        msg = 'Epoch %d: \tTrain loss=%.4f \tValidation loss=%.4f' % (i + 1, train_loss, val_loss)
+        msg = 'Epoch %d: \tTrain loss=%.4f \tValidation loss=%.4f \tAccuracy=%.4f' % (i + 1, train_loss, val_loss, accuracy)
         tqdm.write(msg)
 
     if embedding:
