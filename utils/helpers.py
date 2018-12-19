@@ -4,7 +4,6 @@ import os
 import sys
 import torch
 import numpy as np
-from utils.params import default_params
 import csv
 
 
