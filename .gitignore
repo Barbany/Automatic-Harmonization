@@ -97,10 +97,6 @@ venv.bak/
 # Rope project settings
 .ropeproject
 
-# Tensorboard folder
-tboard/
-/site
-
 # mypy
 .mypy_cache/
 
