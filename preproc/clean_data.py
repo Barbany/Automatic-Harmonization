@@ -12,7 +12,8 @@ def create_clean_file(path, clean_data_file, mapping_file, verbose=False):
     #   - Remove global and local key as they are kept as features
     #   - Keep end of phrase boolean
 
-    df = df[['chord', 'mov', 'global_key', 'local_key', 'phraseend']]
+    df = df[['chord', 'altchord', 'mov', 'length', 'global_key', 'local_key', 'pedal', 'form', 'figbass',
+        'changes', 'relativeroot', 'phraseend']]
 
     # Remove end of phrase
     df['chord'] = df['chord'].str.replace('\\\\\\\\', '')
