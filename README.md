@@ -24,6 +24,7 @@ Before trying to run the code, make sure to install all the requirements specifi
 
     pip install -r requirements.txt
 
+We also recommend to install CUDA and cuDNN for GPU acceleration although code is adapted to run with or without it.
 #### Report
 Check our paper located at the `report/` folder to have an overview of the project and to look at the justification of all the steps that led us to the final model.
 
