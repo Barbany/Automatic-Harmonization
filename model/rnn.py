@@ -1,7 +1,5 @@
-import sys
 import torch
 import torch.nn as nn
-import json
 
 
 class Sequence(torch.nn.Module):

@@ -1,7 +1,8 @@
 """ Apply pre-processing techniques to raw data """
-import pandas as pd
 import json
+
 import numpy as np
+import pandas as pd
 
 
 def create_clean_file(path, clean_data_file, mapping_file, verbose=False):

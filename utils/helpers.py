@@ -1,11 +1,11 @@
 """Function used to create results folder and save a log of all prints."""
 
+import csv
 import os
 import sys
-import torch
-import numpy as np
-import csv
 
+import numpy as np
+import torch
 
 tag_params = [
     'split_by_phrase', 'embedding', 'conditioner', 'embedding_size'

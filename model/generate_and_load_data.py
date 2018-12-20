@@ -1,13 +1,11 @@
-import torch
-from torch.utils.data import Dataset
-
-from preproc.clean_data import create_clean_file
-from utils.params import default_params
+import json
+import os
 
 import numpy as np
 import pandas as pd
-import json
-import os
+import torch
+
+from preproc.clean_data import create_clean_file
 
 
 def generate_data(path, split_by_phrase, len_seq_phrase, len_phrase, partitions, verbose=False):

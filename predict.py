@@ -1,20 +1,13 @@
 import json
-
-import torch
-
-from tensorboardX import SummaryWriter
-
-from utils.params import parse_arguments_prediction, default_params
-from utils.helpers import init_random_seed, setup_results_dir, tee_stdout
+import os
 
 import numpy as np
 import pandas as pd
-
-from tqdm import tqdm
-import os
+import torch
 
 from model.rnn import Sequence
-from model.generate_and_load_data import generate_data, load_data
+from utils.helpers import init_random_seed, setup_results_dir
+from utils.params import parse_arguments_prediction, default_params
 
 
 def main(**params):
