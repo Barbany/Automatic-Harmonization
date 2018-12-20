@@ -33,8 +33,16 @@ def main(**params):
             df[col] = np.vectorize(mapping[col].get)(df[col])
 
     features = np.asarray(df.values, dtype=float)
+
     chords = features[:, 0]
     features = features[:, 1:]
+    
+    split_by_phrase = params['split_by_phrase']
+    mean_features = np.load(params['data_path'] + split_by_phrase * 'phrase-split' +
+                         (not split_by_phrase) * 'sequential' + '_mean_features.npy')
+    std_features = np.load(params['data_path'] + split_by_phrase * 'phrase-split' +
+                         (not split_by_phrase) * 'sequential' + '_std_features.npy')               
+    features = (features - mean_features) / std_features
 
     # Keep non-nan values (initial chords) and define the future (chords to be predicted given the length of features)
     chords = chords[~np.isnan(chords)]

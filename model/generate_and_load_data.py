@@ -113,8 +113,10 @@ def generate_data(path, split_by_phrase, len_seq_phrase, len_phrase, partitions,
                 if part == 'train':
                     mean_features = np.mean(part_data[:, 1:], axis=0)
                     std_features = np.std(part_data[:, 1:], axis=0)
-                    print(mean_features)
-                    print(std_features)
+                    np.save(split_by_phrase * 'phrase-split' +
+                         (not split_by_phrase) * 'sequential' + '_mean_features.npy', mean_features)
+                    np.save(split_by_phrase * 'phrase-split' +
+                         (not split_by_phrase) * 'sequential' + '_std_features.npy', std_features)
                 
                 part_data[:, 1:] = (part_data[:, 1:] - mean_features) / std_features
 
