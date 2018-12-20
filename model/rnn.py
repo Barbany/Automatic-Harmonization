@@ -36,18 +36,18 @@ class Sequence(torch.nn.Module):
                     out_features=self.input_rnn_size
                 )
 
-        self.lstm1 = nn.LSTMCell(self.input_rnn_size, self.hidden_size)
-        self.lstm2 = nn.LSTMCell(self.hidden_size, self.hidden_size)
-        self.linear = nn.Linear(self.hidden_size, self.vocabulary_size)  # make it with our vocabulary size
+        self.lstm1 = nn.LSTMCell(self.input_rnn_size, self.hidden_size[0])
+        self.lstm2 = nn.LSTMCell(self.hidden_size[0], self.hidden_size[1])
+        self.linear = nn.Linear(self.hidden_size[1], self.vocabulary_size)  # make it with our vocabulary size
 
 
     def forward(self, input, features, future = 0):
         outputs = []
         batch_size = input.size(0)
-        h_t = torch.zeros(batch_size, self.hidden_size, dtype=torch.double)
-        c_t = torch.zeros(batch_size, self.hidden_size, dtype=torch.double)
-        h_t2 = torch.zeros(batch_size, self.hidden_size, dtype=torch.double)
-        c_t2 = torch.zeros(batch_size, self.hidden_size, dtype=torch.double)
+        h_t = torch.zeros(batch_size, self.hidden_size[0], dtype=torch.double)
+        c_t = torch.zeros(batch_size, self.hidden_size[0], dtype=torch.double)
+        h_t2 = torch.zeros(batch_size, self.hidden_size[1], dtype=torch.double)
+        c_t2 = torch.zeros(batch_size, self.hidden_size[1], dtype=torch.double)
 
         for idx, input_t in enumerate(input.chunk(input.size(1), dim=1)):
             if self.embedding:

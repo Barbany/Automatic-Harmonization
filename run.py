@@ -44,7 +44,7 @@ def main(**params):
     print('Results path is ', results_path, ' and log is already set there')
 
     # Create writer for Tensorboard: Visualize plots at real time when training
-    writer = SummaryWriter(log_dir=results_path + 'tboard')
+    # writer = SummaryWriter(log_dir=results_path + 'tboard')
 
     # Generate data files if not created
     generate_data(params['data_path'], params['split_by_phrase'], params['len_seq_phrase'],
@@ -81,12 +81,12 @@ def main(**params):
     # Build the model and move it to the GOU is possible
     if use_cuda:
         seq = Sequence(vocabulary_size=vocabulary_size, hidden_size=params['hidden_size'], embedding=embedding,
-                       embed_size=params['embedding_size'], cond_size=num_features,
-                       input_rnn_size=params['input_rnn_size']).cuda()
+                    embed_size=params['embedding_size'], cond_size=num_features,
+                    input_rnn_size=params['input_rnn_size']).cuda()
     else:
         seq = Sequence(vocabulary_size=vocabulary_size, hidden_size=params['hidden_size'], embedding=embedding,
-                       embed_size=params['embedding_size'], cond_size=num_features,
-                       input_rnn_size=params['input_rnn_size'])
+                    embed_size=params['embedding_size'], cond_size=num_features,
+                    input_rnn_size=params['input_rnn_size'])
 
     seq.double()
     criterion = torch.nn.CrossEntropyLoss()
@@ -128,20 +128,20 @@ def main(**params):
             torch.save(seq.state_dict(), results_path + '/best_model.torch')
 
         # Tensorboard
-        writer.add_scalars('data/loss', {'train': train_loss,
-                                         'validation': val_loss}, i)
+        # writer.add_scalars('data/loss', {'train': train_loss,
+        #                                'validation': val_loss}, i)
 
         # Accuracy
         accuracy = accuracy_score(y, y_pred)
-        writer.add_scalar('accuracy', accuracy, i)
+        # writer.add_scalar('accuracy', accuracy, i)
 
         # Report
         msg = 'Epoch %d: \tTrain loss=%.4f \tValidation loss=%.4f \tAccuracy=%.4f' % (i + 1, train_loss, val_loss, accuracy)
         tqdm.write(msg)
 
-    if embedding:
-        seq.show_embedding(mapping, writer)
-    writer.close()
+    # if embedding:
+    #    seq.show_embedding(mapping, writer)
+    # writer.close()
 
     n_test = test_target.shape[0]
     # we divide the test dataset into 10 partitions to get more representative results
@@ -171,14 +171,11 @@ def main(**params):
     path_losses = params['results_path'] + params['test_losses_path']
     if not os.path.exists(path_losses):
         os.makedirs(path_losses)
-    name_file = results_path.split('/')[1] + '.npy'
-    np.save(path_losses + name_file, test_losses)
 
     mean_test_loss = np.mean(test_losses)
     std_test_loss = np.std(test_losses)
+    
     print('Test loss = %.4f +- %.4f' % (mean_test_loss, std_test_loss))
-
-    save_test_losses_to_tsv(params)
 
 
 if __name__ == '__main__':
