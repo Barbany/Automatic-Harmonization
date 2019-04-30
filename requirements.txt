@@ -4,4 +4,4 @@ torch==0.4.1
 numpy==1.15.4
 tensorboard==1.12.1
 tensorboardX==1.5
-tensorflow==1.12.0
+tensorflow>=1.12.1
